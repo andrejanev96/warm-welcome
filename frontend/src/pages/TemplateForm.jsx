@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import axios from 'axios';
 import GlassBackdrop from '../components/GlassBackdrop';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import api from '../utils/api';
 
 const TemplateForm = () => {
   const { id } = useParams();
@@ -45,10 +43,7 @@ const TemplateForm = () => {
   const fetchTemplate = useCallback(async () => {
     try {
       setLoadingTemplate(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/templates/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get(`/templates/${id}`);
       const template = response.data.data;
       setFormData({
         name: template.name,
@@ -81,15 +76,10 @@ const TemplateForm = () => {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
       if (isEdit) {
-        await axios.put(`${API_URL}/templates/${id}`, formData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await api.put(`/templates/${id}`, formData);
       } else {
-        await axios.post(`${API_URL}/templates`, formData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await api.post('/templates', formData);
       }
       navigate('/templates');
     } catch (err) {

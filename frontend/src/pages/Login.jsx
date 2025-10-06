@@ -107,6 +107,11 @@ const Login = () => {
                 className="glass-input"
                 placeholder="••••••••"
               />
+              <div className="mt-2 text-right">
+                <Link to="/forgot-password" className="glass-link text-sm">
+                  Forgot your password?
+                </Link>
+              </div>
             </div>
 
             <button

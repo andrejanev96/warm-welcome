@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import axios from 'axios';
 import GlassBackdrop from '../components/GlassBackdrop';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import api from '../utils/api';
 
 const CampaignForm = () => {
   const { id } = useParams();
@@ -40,10 +38,7 @@ const CampaignForm = () => {
 
   const fetchTemplates = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/templates`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get('/templates');
       setTemplates(response.data.data);
     } catch (err) {
       console.error('Failed to load templates:', err);
@@ -53,10 +48,7 @@ const CampaignForm = () => {
   const fetchCampaign = useCallback(async () => {
     try {
       setLoadingData(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/campaigns/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get(`/campaigns/${id}`);
       const campaign = response.data.data;
       setFormData({
         name: campaign.name,
@@ -97,7 +89,6 @@ const CampaignForm = () => {
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
       const payload = {
         ...formData,
         name: formData.name.trim(),
@@ -106,13 +97,9 @@ const CampaignForm = () => {
         endDate: formData.endDate ? formData.endDate : null,
       };
       if (isEdit) {
-        await axios.put(`${API_URL}/campaigns/${id}`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await api.put(`/campaigns/${id}`, payload);
       } else {
-        await axios.post(`${API_URL}/campaigns`, payload, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await api.post('/campaigns', payload);
       }
       navigate('/campaigns');
     } catch (err) {

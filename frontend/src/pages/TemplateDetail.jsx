@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import axios from 'axios';
 import GlassBackdrop from '../components/GlassBackdrop';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import api from '../utils/api';
 
 const categories = [
   { value: 'welcome', label: 'Welcome', icon: '👋' },
@@ -45,10 +43,7 @@ const TemplateDetail = () => {
   const fetchTemplate = useCallback(async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/templates/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get(`/templates/${id}`);
       const fetchedTemplate = response.data.data;
       setTemplate(fetchedTemplate);
       setFormData({
@@ -74,10 +69,7 @@ const TemplateDetail = () => {
     if (!confirm('Are you sure you want to delete this template?')) return;
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/templates/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/templates/${id}`);
       navigate('/templates');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete template');
@@ -87,10 +79,7 @@ const TemplateDetail = () => {
 
   const handleDuplicate = async () => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/templates/${id}/duplicate`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.post(`/templates/${id}/duplicate`);
       navigate('/templates');
     } catch (err) {
       setError('Failed to duplicate template');
@@ -168,10 +157,7 @@ const TemplateDetail = () => {
 
     try {
       setSaving(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.put(`${API_URL}/templates/${id}`, formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.put(`/templates/${id}`, formData);
       const updated = response.data.data;
       setTemplate(updated);
       setFormData({

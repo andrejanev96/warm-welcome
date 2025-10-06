@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 import Layout from '../components/Layout';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import api from '../utils/api';
 
 const Campaigns = () => {
   const [campaigns, setCampaigns] = useState([]);
@@ -21,14 +19,8 @@ const Campaigns = () => {
   const fetchCampaigns = useCallback(async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const url = filter === 'all'
-        ? `${API_URL}/campaigns`
-        : `${API_URL}/campaigns?status=${filter}`;
-
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const params = filter === 'all' ? {} : { status: filter };
+      const response = await api.get('/campaigns', { params });
 
       setCampaigns(response.data.data);
       setError('');
@@ -46,12 +38,7 @@ const Campaigns = () => {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.patch(
-        `${API_URL}/campaigns/${id}/status`,
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.patch(`/campaigns/${id}/status`, { status: newStatus });
       fetchCampaigns();
     } catch (err) {
       setError('Failed to update campaign status');
@@ -63,10 +50,7 @@ const Campaigns = () => {
     if (!confirm('Are you sure you want to delete this campaign?')) return;
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/campaigns/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/campaigns/${id}`);
       fetchCampaigns();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete campaign');

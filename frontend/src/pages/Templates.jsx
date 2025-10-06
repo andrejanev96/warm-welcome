@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
 import Layout from '../components/Layout';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import api from '../utils/api';
 
 const Templates = () => {
   const [templates, setTemplates] = useState([]);
@@ -23,14 +21,8 @@ const Templates = () => {
   const fetchTemplates = useCallback(async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const url = filter === 'all'
-        ? `${API_URL}/templates`
-        : `${API_URL}/templates?category=${filter}`;
-
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const params = filter === 'all' ? {} : { category: filter };
+      const response = await api.get('/templates', { params });
 
       setTemplates(response.data.data);
       setError('');
@@ -48,10 +40,7 @@ const Templates = () => {
 
   const handleDuplicate = async (id) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/templates/${id}/duplicate`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.post(`/templates/${id}/duplicate`);
       fetchTemplates();
     } catch (err) {
       setError('Failed to duplicate template');
@@ -63,10 +52,7 @@ const Templates = () => {
     if (!confirm('Are you sure you want to delete this template?')) return;
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/templates/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/templates/${id}`);
       fetchTemplates();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete template');

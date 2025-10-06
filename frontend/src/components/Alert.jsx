@@ -1,8 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const Alert = ({ type = 'success', message, onClose, duration = 5000 }) => {
   const [isVisible, setIsVisible] = useState(true);
   const [isExiting, setIsExiting] = useState(false);
+
+  const handleClose = useCallback(() => {
+    setIsExiting(true);
+    setTimeout(() => {
+      setIsVisible(false);
+      if (onClose) onClose();
+    }, 300); // Match the animation duration
+  }, [onClose]);
 
   useEffect(() => {
     if (duration > 0) {
@@ -12,15 +20,7 @@ const Alert = ({ type = 'success', message, onClose, duration = 5000 }) => {
 
       return () => clearTimeout(timer);
     }
-  }, [duration]);
-
-  const handleClose = () => {
-    setIsExiting(true);
-    setTimeout(() => {
-      setIsVisible(false);
-      if (onClose) onClose();
-    }, 300); // Match the animation duration
-  };
+  }, [duration, handleClose]);
 
   if (!isVisible) return null;
 

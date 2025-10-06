@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import axios from 'axios';
 import Layout from '../components/Layout';
 import Alert from '../components/Alert';
+import api from '../utils/api';
 
 const Integrations = () => {
   const [searchParams] = useSearchParams();
@@ -14,7 +14,18 @@ const Integrations = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+  const fetchStores = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await api.get('/shopify/stores');
+      setStores(response.data.data || []);
+    } catch (err) {
+      console.error('Error fetching stores:', err);
+      setError('Failed to load connected stores');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (activeTab === 'shopify') {
@@ -26,22 +37,7 @@ const Integrations = () => {
     if (shop) {
       setSuccess(`Successfully connected ${shop}!`);
     }
-  }, [searchParams, activeTab]);
-
-  const fetchStores = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/shopify/stores`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setStores(response.data.data || []);
-    } catch (err) {
-      console.error('Error fetching stores:', err);
-      setError('Failed to load connected stores');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [searchParams, activeTab, fetchStores]);
 
   const handleConnect = async (e) => {
     e.preventDefault();
@@ -49,21 +45,18 @@ const Integrations = () => {
     setConnectLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
       const cleanDomain = shopDomain.replace('.myshopify.com', '');
 
-      const response = await axios.post(
-        `${API_URL}/shopify/install`,
-        { shop: cleanDomain },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await api.post('/shopify/install', { shop: cleanDomain });
 
       if (response.data.data?.installUrl) {
         window.location.href = response.data.data.installUrl;
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to connect store');
+    } finally {
       setConnectLoading(false);
+      setShopDomain('');
     }
   };
 
@@ -73,15 +66,10 @@ const Integrations = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${API_URL}/shopify/stores/${storeId}/disconnect`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post(`/shopify/stores/${storeId}/disconnect`);
 
       setSuccess('Store disconnected successfully');
-      fetchStores();
+      await fetchStores();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to disconnect store');
     }
@@ -89,15 +77,10 @@ const Integrations = () => {
 
   const handleReconnect = async (storeId, shopDomain) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${API_URL}/shopify/stores/${storeId}/reconnect`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post(`/shopify/stores/${storeId}/reconnect`);
 
       setSuccess(`${shopDomain} reconnected successfully`);
-      fetchStores();
+      await fetchStores();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to reconnect store');
     }
@@ -191,11 +174,13 @@ const Integrations = () => {
 
             <form onSubmit={handleConnect} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-white/90 mb-2">
+                <label htmlFor="shopDomain" className="block text-sm font-medium text-white/90 mb-2">
                   Store Domain
                 </label>
                 <div className="flex gap-2">
                   <input
+                    id="shopDomain"
+                    name="shopDomain"
                     type="text"
                     value={shopDomain}
                     onChange={(e) => setShopDomain(e.target.value)}

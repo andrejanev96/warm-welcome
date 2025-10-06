@@ -143,12 +143,16 @@ export const oauthCallback = asyncHandler(async (req, res) => {
       },
     });
 
-    const redirect = process.env.FRONTEND_URL ? `${process.env.FRONTEND_URL}/integrations?shop=${shop}` : undefined;
-    if (redirect) {
+    const redirectBase = process.env.FRONTEND_URL;
+    const shouldRedirect = redirectBase && redirectBase.startsWith('https://');
+    if (shouldRedirect) {
+      const redirect = `${redirectBase}/integrations?shop=${shop}`;
       return res.redirect(redirect);
     }
 
-    return res.status(200).json(successResponse({ shop, scope }, 'Shopify store connected successfully.'));
+    return res.status(200).json(
+      successResponse({ shop, scope }, 'Shopify store connected successfully. You can close this window.')
+    );
   } catch (error) {
     console.error('Shopify OAuth callback error', error);
     return res.status(500).json(errorResponse('Unexpected error completing Shopify connection.'));

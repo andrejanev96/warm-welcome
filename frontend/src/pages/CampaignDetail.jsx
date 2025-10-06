@@ -1,9 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import axios from 'axios';
 import GlassBackdrop from '../components/GlassBackdrop';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import api from '../utils/api';
 
 const CampaignDetail = () => {
   const { id } = useParams();
@@ -15,10 +13,7 @@ const CampaignDetail = () => {
   const fetchCampaign = useCallback(async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/campaigns/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get(`/campaigns/${id}`);
       setCampaign(response.data.data);
       setError('');
     } catch (err) {
