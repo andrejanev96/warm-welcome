@@ -9,7 +9,14 @@
     "start": "node server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "node prisma/seed.js"
+  },
+  "engines": {
+    "node": ">=20.19.0 <21"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "keywords": ["email", "automation", "ai", "saas"],
   "author": "",

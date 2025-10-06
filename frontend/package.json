@@ -9,6 +9,9 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
+  "engines": {
+    "node": ">=20.19.0 <21"
+  },
   "dependencies": {
     "@tanstack/react-query": "^5.90.2",
     "axios": "^1.12.2",

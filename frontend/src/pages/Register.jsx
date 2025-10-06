@@ -14,6 +14,13 @@ const Register = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const isFormValid = Boolean(
+    formData.firstName.trim() &&
+    formData.lastName.trim() &&
+    formData.email.trim() &&
+    formData.password.length >= 8
+  );
+
   const handleChange = (e) => {
     // Clear error when user starts typing
     if (error) {
@@ -28,9 +35,8 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic validation
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long');
+    if (!isFormValid) {
+      setError('Please complete all fields with a password of at least 8 characters.');
       return;
     }
 
@@ -155,8 +161,8 @@ const Register = () => {
 
             <button
               type="submit"
-              disabled={loading}
-              className="glass-btn mt-6"
+              disabled={loading || !isFormValid}
+              className={`glass-btn ${isFormValid ? 'glass-btn-orange' : ''} mt-6`}
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">

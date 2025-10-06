@@ -4,6 +4,13 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Templates from './pages/Templates';
+import TemplateForm from './pages/TemplateForm';
+import TemplateDetail from './pages/TemplateDetail';
+import Campaigns from './pages/Campaigns';
+import CampaignForm from './pages/CampaignForm';
+import CampaignDetail from './pages/CampaignDetail';
+import Integrations from './pages/Integrations';
 
 function App() {
   return (
@@ -18,6 +25,78 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/templates"
+            element={
+              <ProtectedRoute>
+                <Templates />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/templates/new"
+            element={
+              <ProtectedRoute>
+                <TemplateForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/templates/:id/edit"
+            element={
+              <ProtectedRoute>
+                <TemplateForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/templates/:id"
+            element={
+              <ProtectedRoute>
+                <TemplateDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/campaigns"
+            element={
+              <ProtectedRoute>
+                <Campaigns />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/campaigns/new"
+            element={
+              <ProtectedRoute>
+                <CampaignForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/campaigns/:id/edit"
+            element={
+              <ProtectedRoute>
+                <CampaignForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/campaigns/:id"
+            element={
+              <ProtectedRoute>
+                <CampaignDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/integrations"
+            element={
+              <ProtectedRoute>
+                <Integrations />
               </ProtectedRoute>
             }
           />

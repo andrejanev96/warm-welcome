@@ -1,5 +1,8 @@
 import express from 'express';
 import authRoutes from './auth.js';
+import templateRoutes from './templates.js';
+import campaignRoutes from './campaigns.js';
+import shopifyRoutes from './shopify.js';
 
 const router = express.Router();
 
@@ -14,6 +17,9 @@ router.get('/health', (req, res) => {
 
 // API routes
 router.use('/auth', authRoutes);
+router.use('/templates', templateRoutes);
+router.use('/campaigns', campaignRoutes);
+router.use('/shopify', shopifyRoutes);
 
 // 404 handler for undefined routes
 router.use('*', (req, res) => {

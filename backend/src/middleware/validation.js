@@ -53,3 +53,73 @@ export const authSchemas = {
     }),
   }),
 };
+
+/**
+ * Template validation schemas
+ */
+export const templateSchemas = {
+  create: Joi.object({
+    name: Joi.string().required().messages({
+      'any.required': 'Template name is required',
+    }),
+    subject: Joi.string().required().messages({
+      'any.required': 'Email subject is required',
+    }),
+    body: Joi.string().required().messages({
+      'any.required': 'Email body is required',
+    }),
+    category: Joi.string().optional().valid('welcome', 'engagement', 'purchase', 'abandoned_cart', 'general'),
+  }),
+
+  update: Joi.object({
+    name: Joi.string().optional(),
+    subject: Joi.string().optional(),
+    body: Joi.string().optional(),
+    category: Joi.string().optional().valid('welcome', 'engagement', 'purchase', 'abandoned_cart', 'general'),
+  }),
+};
+
+/**
+ * Campaign validation schemas
+ */
+export const campaignSchemas = {
+  create: Joi.object({
+    name: Joi.string().required().messages({
+      'any.required': 'Campaign name is required',
+    }),
+    description: Joi.string().optional().allow(''),
+    templateId: Joi.string().required().messages({
+      'any.required': 'Template ID is required',
+    }),
+    triggerType: Joi.string().required().valid(
+      'user_signup',
+      'first_purchase',
+      'abandoned_cart',
+      'post_purchase',
+      'engagement',
+      'custom'
+    ).messages({
+      'any.required': 'Trigger type is required',
+    }),
+    triggerConditions: Joi.object().optional(),
+    startDate: Joi.date().optional().allow(null),
+    endDate: Joi.date().optional().allow(null).min(Joi.ref('startDate')).messages({
+      'date.min': 'End date must be after start date',
+    }),
+  }),
+
+  update: Joi.object({
+    name: Joi.string().optional(),
+    description: Joi.string().optional().allow(''),
+    templateId: Joi.string().optional(),
+    startDate: Joi.date().optional().allow(null),
+    endDate: Joi.date().optional().allow(null),
+  }),
+
+  updateStatus: Joi.object({
+    status: Joi.string().required().valid('active', 'paused', 'completed').messages({
+      'any.required': 'Status is required',
+      'any.only': 'Status must be: active, paused, or completed',
+    }),
+  }),
+};

@@ -22,6 +22,7 @@ model User {
   // Relations (for future use)
   stores    ShopifyStore[]
   campaigns Campaign[]
+  templates EmailTemplate[]
 
   @@map("users")
 }
@@ -44,18 +45,22 @@ model ShopifyStore {
 }
 
 model Campaign {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   userId      String
   storeId     String?
+  templateId  String?
   name        String
   description String?
-  status      String   @default("draft") // draft, active, paused, archived
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status      String    @default("draft") // draft, active, paused, archived
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   // Relations
   user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   store    ShopifyStore?  @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  template EmailTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
   triggers Trigger[]
   emails   Email[]
 
@@ -65,9 +70,10 @@ model Campaign {
 model Trigger {
   id         String   @id @default(uuid())
   campaignId String
-  type       String   // signup, no_activity, first_purchase, abandoned_cart, etc.
+  name       String?
+  type       String // signup, no_activity, first_purchase, abandoned_cart, etc.
   delay      Int      @default(0) // Delay in minutes
-  conditions String?    // Additional conditions as JSON string
+  conditions String? // Additional conditions as JSON string
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -79,35 +85,38 @@ model Trigger {
 
 model EmailTemplate {
   id        String   @id @default(uuid())
+  userId    String?
   name      String
   subject   String
   body      String
-  category  String?  // welcome, engagement, purchase, etc.
+  category  String? // welcome, engagement, purchase, etc.
   isDefault Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  emails Email[]
+  emails    Email[]
+  campaigns Campaign[]
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("email_templates")
 }
 
 model Email {
-  id          String    @id @default(uuid())
-  campaignId  String
-  templateId  String?
+  id             String    @id @default(uuid())
+  campaignId     String
+  templateId     String?
   recipientEmail String
-  subject     String
-  body        String
-  status      String    @default("pending") // pending, sent, failed, delivered, opened, clicked
-  sentAt      DateTime?
-  openedAt    DateTime?
-  clickedAt   DateTime?
-  errorMessage String?
-  metadata    String?     // Additional data as JSON string
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  subject        String
+  body           String
+  status         String    @default("pending") // pending, sent, failed, delivered, opened, clicked
+  sentAt         DateTime?
+  openedAt       DateTime?
+  clickedAt      DateTime?
+  errorMessage   String?
+  metadata       String? // Additional data as JSON string
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   // Relations
   campaign Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)

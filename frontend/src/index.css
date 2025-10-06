@@ -1,3 +1,4 @@
+/* stylelint-disable at-rule-no-unknown */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -11,6 +12,49 @@
 }
 
 @layer components {
+  .glass-page {
+    @apply min-h-screen relative overflow-hidden;
+    color: white;
+  }
+
+  .glass-backdrop {
+    @apply absolute inset-0 -z-10 overflow-hidden;
+  }
+
+  .blob {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(120px);
+    opacity: 0.28;
+    animation: blob 18s infinite;
+  }
+
+  .blob-1 {
+    width: 28rem;
+    height: 28rem;
+    top: -10%;
+    left: -10%;
+    background: radial-gradient(circle at 30% 30%, rgba(129, 140, 248, 0.6), rgba(79, 70, 229, 0));
+  }
+
+  .blob-2 {
+    width: 32rem;
+    height: 32rem;
+    top: 30%;
+    right: -15%;
+    background: radial-gradient(circle at 30% 30%, rgba(236, 72, 153, 0.55), rgba(244, 114, 182, 0));
+    animation-delay: 4s;
+  }
+
+  .blob-3 {
+    width: 26rem;
+    height: 26rem;
+    bottom: -12%;
+    left: 25%;
+    background: radial-gradient(circle at 30% 30%, rgba(14, 165, 233, 0.5), rgba(14, 165, 233, 0));
+    animation-delay: 8s;
+  }
+
   /* Liquid Glass Card */
   .glass-card {
     @apply rounded-2xl p-8 shadow-2xl;
@@ -64,6 +108,15 @@
     cursor: not-allowed;
   }
 
+  .glass-btn-orange {
+    background: #ee6b23;
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  .glass-btn-orange:hover:not(:disabled) {
+    background: #ff7f3f;
+  }
+
   /* Error Alert with Glass Effect */
   .glass-alert {
     @apply p-4 rounded-xl mb-4;
@@ -92,6 +145,31 @@
     text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
   }
 
+  /* Glass Navigation */
+  .glass-nav {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Glass Button (smaller variant) */
+  .glass-button {
+    @apply px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+  }
+
+  .glass-button:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  }
+
   /* Legacy card class for backward compatibility */
   .card {
     @apply bg-white rounded-xl shadow-sm p-6;
@@ -109,3 +187,14 @@
     @apply bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-4 focus:ring-gray-200;
   }
 }
+
+@layer utilities {
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+}
+/* stylelint-enable at-rule-no-unknown */

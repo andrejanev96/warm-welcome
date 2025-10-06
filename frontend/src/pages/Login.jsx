@@ -112,7 +112,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="glass-btn mt-6"
+              className="glass-btn glass-btn-orange mt-6"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
