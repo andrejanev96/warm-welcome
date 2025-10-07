@@ -3,6 +3,20 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import prisma from '../utils/database.js';
 import { successResponse, errorResponse, asyncHandler } from '../utils/helpers.js';
+import { sendPasswordResetEmail } from '../services/email.js';
+
+const getClientIp = (req) => {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string' && forwarded.length > 0) {
+    return forwarded.split(',')[0].trim();
+  }
+
+  if (Array.isArray(forwarded) && forwarded.length > 0) {
+    return forwarded[0];
+  }
+
+  return req.ip || null;
+};
 
 /**
  * Generate JWT token
@@ -167,6 +181,10 @@ export const updateProfile = asyncHandler(async (req, res) => {
 export const requestPasswordReset = asyncHandler(async (req, res) => {
   const { email } = req.body;
   const normalizedEmail = email?.toLowerCase();
+  const userAgent = req.get('user-agent');
+
+  let auditStatus = 'ignored';
+  let userIdForAudit = null;
 
   if (normalizedEmail) {
     const user = await prisma.user.findUnique({
@@ -174,6 +192,7 @@ export const requestPasswordReset = asyncHandler(async (req, res) => {
     });
 
     if (user) {
+      userIdForAudit = user.id;
       const rawToken = crypto.randomBytes(32).toString('hex');
       const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
       const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
@@ -189,9 +208,33 @@ export const requestPasswordReset = asyncHandler(async (req, res) => {
       const resetLinkBase = process.env.FRONTEND_URL || 'http://localhost:5173';
       const resetLink = `${resetLinkBase}/reset-password/${rawToken}`;
 
-      console.info('[Auth] Password reset requested for %s. Reset URL: %s', normalizedEmail, resetLink);
+      const sent = await sendPasswordResetEmail({
+        to: normalizedEmail,
+        resetLink,
+        expiresAt: expires,
+      });
+
+      auditStatus = sent ? 'email_sent' : 'email_failed';
+
+      if (!sent) {
+        console.info('[Auth] Password reset requested for %s. Reset URL: %s', normalizedEmail, resetLink);
+      }
+    } else {
+      auditStatus = 'user_not_found';
     }
+  } else {
+    auditStatus = 'invalid_email';
   }
+
+  await prisma.passwordResetAudit.create({
+    data: {
+      email: normalizedEmail || email || 'unknown',
+      userId: userIdForAudit,
+      status: auditStatus,
+      requestIp: getClientIp(req),
+      userAgent: userAgent || null,
+    },
+  });
 
   res.status(200).json(
     successResponse(null, 'If that email exists in our system, a reset link has been sent.')

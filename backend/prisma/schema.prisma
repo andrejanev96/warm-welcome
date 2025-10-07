@@ -25,6 +25,7 @@ model User {
   stores     ShopifyStore[]
   campaigns  Campaign[]
   brandVoice BrandVoice?
+  passwordResetAudits PasswordResetAudit[]
 
   @@map("users")
 }
@@ -124,4 +125,20 @@ model Email {
   campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@map("emails")
+}
+
+model PasswordResetAudit {
+  id        String   @id @default(uuid())
+  userId    String?
+  email     String
+  requestIp String?
+  userAgent String?
+  status    String   @default("requested")
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("password_reset_audit")
+  @@index([email], name: "password_reset_audit_email_idx")
+  @@index([createdAt], name: "password_reset_audit_created_at_idx")
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
-import GlassBackdrop from '../components/GlassBackdrop';
+import { useNavigate, useParams } from 'react-router-dom';
+import Layout from '../components/Layout';
+import Alert from '../components/Alert';
 import api from '../utils/api';
 
 const CampaignForm = () => {
@@ -11,37 +12,44 @@ const CampaignForm = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    templateId: '',
+    goal: 'welcome',
+    storeId: '',
     triggerType: 'user_signup',
     startDate: '',
     endDate: '',
   });
-  const [templates, setTemplates] = useState([]);
+  const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const isFormValid = Boolean(
-    formData.name.trim() &&
-    formData.templateId &&
-    formData.triggerType
-  );
+  const isFormValid = Boolean(formData.name.trim() && formData.goal && formData.triggerType);
 
-  const triggerTypes = [
-    { value: 'user_signup', label: 'User Signup', icon: '👋', description: 'Trigger when a new user signs up' },
-    { value: 'first_purchase', label: 'First Purchase', icon: '🛍️', description: "Trigger after customer's first purchase" },
-    { value: 'abandoned_cart', label: 'Abandoned Cart', icon: '🛒', description: 'Trigger when cart is abandoned' },
-    { value: 'post_purchase', label: 'Post Purchase', icon: '📦', description: 'Trigger after a purchase is made' },
-    { value: 'engagement', label: 'Re-engagement', icon: '💬', description: 'Trigger for inactive users' },
-    { value: 'custom', label: 'Custom', icon: '⚙️', description: 'Custom trigger conditions' },
+  const goals = [
+    { value: 'welcome', label: 'Welcome New Customers', icon: '👋', description: 'Make a warm first impression' },
+    { value: 're-engage', label: 'Re-engage Inactive', icon: '💤', description: 'Win back dormant customers' },
+    { value: 'upsell', label: 'Upsell & Cross-sell', icon: '🚀', description: 'Suggest complementary products' },
+    { value: 'milestone', label: 'Celebrate Milestones', icon: '🎉', description: 'Acknowledge customer achievements' },
+    { value: 'nurture', label: 'Nurture Leads', icon: '🌱', description: 'Build relationships over time' },
+    { value: 'feedback', label: 'Request Feedback', icon: '💬', description: 'Gather customer insights' },
   ];
 
-  const fetchTemplates = useCallback(async () => {
+  const triggerTypes = [
+    { value: 'user_signup', label: 'User Signup', icon: '👋', description: 'When a new user creates an account' },
+    { value: 'first_purchase', label: 'First Purchase', icon: '🛍️', description: "After customer's first purchase" },
+    { value: 'abandoned_cart', label: 'Abandoned Cart', icon: '🛒', description: 'When cart is abandoned for 24h' },
+    { value: 'post_purchase', label: 'Post Purchase', icon: '📦', description: 'After a purchase is completed' },
+    { value: 'no_activity', label: 'No Activity', icon: '💤', description: 'After 30 days of inactivity' },
+    { value: 'high_value', label: 'High Value Reached', icon: '⭐', description: 'When customer reaches spending threshold' },
+  ];
+
+  const fetchStores = useCallback(async () => {
     try {
-      const response = await api.get('/templates');
-      setTemplates(response.data.data);
+      const response = await api.get('/shopify/stores');
+      setStores(response.data.data || []);
     } catch (err) {
-      console.error('Failed to load templates:', err);
+      console.error('Failed to load stores:', err);
     }
   }, []);
 
@@ -53,8 +61,9 @@ const CampaignForm = () => {
       setFormData({
         name: campaign.name,
         description: campaign.description || '',
-        templateId: campaign.template?.id || '',
-        triggerType: 'user_signup',
+        goal: campaign.goal || 'welcome',
+        storeId: campaign.store?.id || '',
+        triggerType: campaign.triggers?.[0]?.type || 'user_signup',
         startDate: campaign.startDate ? campaign.startDate.split('T')[0] : '',
         endDate: campaign.endDate ? campaign.endDate.split('T')[0] : '',
       });
@@ -67,8 +76,8 @@ const CampaignForm = () => {
   }, [id]);
 
   useEffect(() => {
-    fetchTemplates();
-  }, [fetchTemplates]);
+    fetchStores();
+  }, [fetchStores]);
 
   useEffect(() => {
     if (isEdit) {
@@ -90,18 +99,24 @@ const CampaignForm = () => {
 
     try {
       const payload = {
-        ...formData,
         name: formData.name.trim(),
         description: formData.description.trim() || null,
-        startDate: formData.startDate ? formData.startDate : null,
-        endDate: formData.endDate ? formData.endDate : null,
+        goal: formData.goal,
+        storeId: formData.storeId || null,
+        triggerType: formData.triggerType,
+        startDate: formData.startDate || null,
+        endDate: formData.endDate || null,
       };
+
       if (isEdit) {
         await api.put(`/campaigns/${id}`, payload);
+        setSuccess('Campaign updated successfully!');
       } else {
         await api.post('/campaigns', payload);
+        setSuccess('Campaign created successfully!');
       }
-      navigate('/campaigns');
+
+      setTimeout(() => navigate('/campaigns'), 1500);
     } catch (err) {
       setError(err.response?.data?.message || `Failed to ${isEdit ? 'update' : 'create'} campaign`);
       console.error('Failed to save campaign', err);
@@ -112,58 +127,47 @@ const CampaignForm = () => {
 
   if (loadingData) {
     return (
-      <div className="glass-page flex items-center justify-center">
-        <GlassBackdrop />
-        <div className="glass-card flex items-center gap-4">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white/70"></div>
-          <span className="text-white/80">Loading campaign details...</span>
+      <Layout>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="glass-page">
-      <GlassBackdrop />
-
-      {/* Header */}
-      <div className="glass-nav">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <Link to="/campaigns" className="glass-button bg-white/10 hover:bg-white/20">
-                  ← Back
-                </Link>
-                <h1 className="text-3xl font-bold text-white">
-                  {isEdit ? 'Edit Campaign' : 'Create New Campaign'}
-                </h1>
-              </div>
-              <p className="text-sm text-white/80 max-w-2xl">
-                {isEdit ? 'Update your automated email journey with refreshed details.' : 'Launch a behavior-based journey that greets customers with warmth and perfectly timed messages.'}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-xs uppercase tracking-widest text-white/60">Status</p>
-              <p className="text-sm font-semibold text-white/90">Draft • Paused</p>
-            </div>
-          </div>
-        </div>
+    <Layout>
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-white mb-2">
+          {isEdit ? 'Edit Campaign' : 'Create New Campaign'}
+        </h1>
+        <p className="text-lg text-white/80">
+          {isEdit
+            ? 'Update your AI-powered email campaign'
+            : 'Set up triggers and let AI generate unique emails for each customer'}
+        </p>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="glass-card space-y-8">
-          {error && (
-            <div className="glass-alert border border-red-500/40 text-red-100 bg-red-500/20">
-              {error}
-            </div>
-          )}
+      {success && (
+        <div className="mb-6">
+          <Alert type="success" message={success} onClose={() => setSuccess('')} duration={3000} />
+        </div>
+      )}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Campaign Name */}
-            <div className="space-y-2">
-              <label htmlFor="name" className="glass-label">
+      {error && (
+        <div className="mb-6">
+          <Alert type="error" message={error} onClose={() => setError('')} duration={5000} />
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Campaign Name */}
+        <div className="glass-card">
+          <h2 className="text-2xl font-bold text-white mb-6">Campaign Details</h2>
+
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-white/90 mb-2">
                 Campaign Name *
               </label>
               <input
@@ -174,13 +178,12 @@ const CampaignForm = () => {
                 onChange={handleChange}
                 required
                 placeholder="e.g., Welcome Series"
-                className="glass-input"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
               />
             </div>
 
-            {/* Description */}
-            <div className="space-y-2">
-              <label htmlFor="description" className="glass-label">
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium text-white/90 mb-2">
                 Description
               </label>
               <textarea
@@ -189,149 +192,213 @@ const CampaignForm = () => {
                 value={formData.description}
                 onChange={handleChange}
                 rows={3}
-                placeholder="Brief description of this campaign..."
-                className="glass-input min-h-[120px] resize-y"
+                placeholder="Brief description of this campaign's purpose..."
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
               />
-              <p className="text-xs text-white/60">
-                Share context for your teammates so everyone knows what this journey aims to achieve.
-              </p>
             </div>
+          </div>
+        </div>
 
-            {/* Select Template */}
-            <div className="space-y-2">
-              <label htmlFor="templateId" className="glass-label">
-                Email Template *
-              </label>
-              <select
-                id="templateId"
-                name="templateId"
-                value={formData.templateId}
-                onChange={handleChange}
-                required
-                className="glass-input"
-              >
-                <option value="">Select a template...</option>
-                {templates.map((template) => (
-                  <option key={template.id} value={template.id}>
-                    {template.name} ({template.category})
+        {/* Campaign Goal */}
+        <div className="glass-card">
+          <h2 className="text-2xl font-bold text-white mb-2">Campaign Goal *</h2>
+          <p className="text-sm text-white/70 mb-6">What's the purpose of this campaign?</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {goals.map((goal) => {
+              const isSelected = formData.goal === goal.value;
+              return (
+                <label
+                  key={goal.value}
+                  className={`relative flex items-start gap-3 rounded-xl p-4 transition-all border cursor-pointer ${
+                    isSelected
+                      ? 'bg-white/20 border-orange-400 shadow-lg'
+                      : 'bg-white/5 border-white/20 hover:bg-white/10'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="goal"
+                    value={goal.value}
+                    checked={isSelected}
+                    onChange={handleChange}
+                    className="sr-only"
+                  />
+                  <span className="text-2xl flex-shrink-0">{goal.icon}</span>
+                  <div className="flex-1">
+                    <p className="font-semibold text-white">{goal.label}</p>
+                    <p className="text-xs text-white/70 mt-1">{goal.description}</p>
+                  </div>
+                  {isSelected && (
+                    <span className="absolute top-3 right-3 inline-flex items-center justify-center h-5 w-5 rounded-full bg-orange-400 text-white text-xs">
+                      ✓
+                    </span>
+                  )}
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Store Selection */}
+        {stores.length > 0 && (
+          <div className="glass-card">
+            <h2 className="text-2xl font-bold text-white mb-2">Connected Store</h2>
+            <p className="text-sm text-white/70 mb-4">Which store should this campaign use?</p>
+
+            <select
+              id="storeId"
+              name="storeId"
+              value={formData.storeId}
+              onChange={handleChange}
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+            >
+              <option value="">All stores</option>
+              {stores
+                .filter(store => store.isActive)
+                .map((store) => (
+                  <option key={store.id} value={store.id}>
+                    {store.shopDomain}
                   </option>
                 ))}
-              </select>
-              <p className="text-xs text-white/60">
-                This template is the warm message customers receive when the trigger fires.
+            </select>
+            <p className="text-xs text-white/60 mt-2">
+              Leave as "All stores" to run this campaign across all connected stores
+            </p>
+          </div>
+        )}
+
+        {/* Trigger Type */}
+        <div className="glass-card">
+          <h2 className="text-2xl font-bold text-white mb-2">Trigger Event *</h2>
+          <p className="text-sm text-white/70 mb-6">When should this campaign send emails?</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {triggerTypes.map((trigger) => {
+              const isSelected = formData.triggerType === trigger.value;
+              return (
+                <label
+                  key={trigger.value}
+                  className={`relative flex items-start gap-3 rounded-xl p-4 transition-all border cursor-pointer ${
+                    isSelected
+                      ? 'bg-white/20 border-orange-400 shadow-lg'
+                      : 'bg-white/5 border-white/20 hover:bg-white/10'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="triggerType"
+                    value={trigger.value}
+                    checked={isSelected}
+                    onChange={handleChange}
+                    className="sr-only"
+                  />
+                  <span className="text-2xl flex-shrink-0">{trigger.icon}</span>
+                  <div className="flex-1">
+                    <p className="font-semibold text-white">{trigger.label}</p>
+                    <p className="text-xs text-white/70 mt-1">{trigger.description}</p>
+                  </div>
+                  {isSelected && (
+                    <span className="absolute top-3 right-3 inline-flex items-center justify-center h-5 w-5 rounded-full bg-orange-400 text-white text-xs">
+                      ✓
+                    </span>
+                  )}
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Date Range */}
+        <div className="glass-card">
+          <h2 className="text-2xl font-bold text-white mb-6">Schedule (Optional)</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="startDate" className="block text-sm font-medium text-white/90 mb-2">
+                Start Date
+              </label>
+              <input
+                type="date"
+                id="startDate"
+                name="startDate"
+                value={formData.startDate}
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+              />
+              <p className="text-xs text-white/60 mt-2">
+                When should the campaign begin? Leave blank to start immediately.
               </p>
             </div>
-
-            {/* Trigger Type */}
-            <div className="space-y-3">
-              <span className="glass-label">Trigger Event *</span>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {triggerTypes.map((trigger) => {
-                  const isSelected = formData.triggerType === trigger.value;
-                  return (
-                    <label
-                      key={trigger.value}
-                      className={`relative flex items-start gap-3 rounded-2xl p-5 transition-all border ${
-                        isSelected
-                          ? 'bg-white/20 border-white/50 shadow-lg shadow-primary-500/20'
-                          : 'bg-white/10 border-white/20 hover:bg-white/15'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="triggerType"
-                        value={trigger.value}
-                        checked={isSelected}
-                        onChange={handleChange}
-                        className="sr-only"
-                      />
-                      <span className="text-2xl flex-shrink-0">{trigger.icon}</span>
-                      <div className="space-y-1">
-                        <p className="font-semibold text-white">{trigger.label}</p>
-                        <p className="text-xs text-white/70">{trigger.description}</p>
-                      </div>
-                      {isSelected && (
-                        <span className="absolute top-4 right-4 inline-flex items-center justify-center h-6 w-6 rounded-full bg-white/30 text-white">
-                          ✓
-                        </span>
-                      )}
-                    </label>
-                  );
-                })}
-              </div>
+            <div>
+              <label htmlFor="endDate" className="block text-sm font-medium text-white/90 mb-2">
+                End Date
+              </label>
+              <input
+                type="date"
+                id="endDate"
+                name="endDate"
+                value={formData.endDate}
+                onChange={handleChange}
+                min={formData.startDate}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+              />
+              <p className="text-xs text-white/60 mt-2">
+                Optional — leave blank for an always-on campaign.
+              </p>
             </div>
-
-            {/* Date Range */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label htmlFor="startDate" className="glass-label">
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  id="startDate"
-                  name="startDate"
-                  value={formData.startDate}
-                  onChange={handleChange}
-                  className="glass-input"
-                />
-                <p className="text-xs text-white/60">
-                  When should the campaign begin sending?
-                </p>
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="endDate" className="glass-label">
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  id="endDate"
-                  name="endDate"
-                  value={formData.endDate}
-                  onChange={handleChange}
-                  min={formData.startDate}
-                  className="glass-input"
-                />
-                <p className="text-xs text-white/60">
-                  Optional — leave blank for an always-on journey.
-                </p>
-              </div>
-            </div>
-
-            {/* Info Box */}
-            <div className="rounded-2xl border border-white/20 bg-white/10 p-5">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">💡</span>
-                <div>
-                  <h4 className="font-semibold text-white mb-1">Campaign Status</h4>
-                  <p className="text-sm text-white/70">
-                    New campaigns launch in a paused state so you can double-check everything. Activate from the campaigns list when you are ready to start sending.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <button
-                type="submit"
-                disabled={loading || !isFormValid}
-                className={`glass-button flex-1 justify-center disabled:opacity-60 disabled:cursor-not-allowed ${isFormValid ? 'glass-btn-orange' : ''}`}
-              >
-                {loading ? 'Saving...' : isEdit ? 'Update Campaign' : 'Create Campaign'}
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/campaigns')}
-                className="glass-button justify-center sm:w-auto"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
-      </div>
-    </div>
+
+        {/* AI Info */}
+        <div className="glass-card border-2 border-orange-400/30">
+          <div className="flex items-start gap-3">
+            <span className="text-3xl">🤖</span>
+            <div>
+              <h3 className="text-xl font-bold text-white mb-2">AI-Powered Personalization</h3>
+              <p className="text-sm text-white/70">
+                Once activated, AI will generate unique, personalized emails for each recipient based on:
+              </p>
+              <ul className="mt-3 space-y-2 text-sm text-white/70">
+                <li className="flex items-start gap-2">
+                  <span className="text-orange-400">•</span>
+                  <span>Your brand voice settings</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-orange-400">•</span>
+                  <span>Customer purchase history and behavior</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-orange-400">•</span>
+                  <span>Campaign goal and trigger context</span>
+                </li>
+              </ul>
+              <p className="text-sm text-white/70 mt-3">
+                No two emails will be the same — each one is crafted specifically for the recipient.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={loading || !isFormValid}
+            className="glass-button flex-1 justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Saving...' : isEdit ? 'Update Campaign' : 'Create Campaign'}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/campaigns')}
+            className="glass-button justify-center"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </Layout>
   );
 };
 

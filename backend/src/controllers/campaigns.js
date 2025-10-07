@@ -184,7 +184,7 @@ export const createCampaign = asyncHandler(async (req, res) => {
  */
 export const updateCampaign = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, description, goal, storeId, startDate, endDate } = req.body;
+  const { name, description, goal, storeId, startDate, endDate, triggerType, triggerConditions } = req.body;
 
   const existingCampaign = await prisma.campaign.findFirst({
     where: {
@@ -236,7 +236,7 @@ export const updateCampaign = asyncHandler(async (req, res) => {
     data.storeId = storeId || null;
   }
 
-  const updatedCampaign = await prisma.campaign.update({
+  let updatedCampaign = await prisma.campaign.update({
     where: { id },
     data,
     include: {
@@ -258,6 +258,79 @@ export const updateCampaign = asyncHandler(async (req, res) => {
       },
     },
   });
+
+  const triggerUpdateRequested = triggerType !== undefined || triggerConditions !== undefined;
+
+  if (triggerUpdateRequested) {
+    const currentTrigger = await prisma.trigger.findFirst({
+      where: { campaignId: id },
+    });
+
+    const campaignNameForTrigger = data.name ?? updatedCampaign.name ?? existingCampaign.name;
+
+    if (triggerType === null) {
+      if (currentTrigger) {
+        await prisma.trigger.delete({ where: { id: currentTrigger.id } });
+      }
+    } else if (currentTrigger) {
+      const triggerData = {};
+
+      if (triggerType !== undefined) {
+        triggerData.type = triggerType;
+      }
+
+      if (triggerType !== undefined || data.name !== undefined) {
+        triggerData.name = `${campaignNameForTrigger} - Trigger`;
+      }
+
+      if (triggerConditions !== undefined) {
+        triggerData.delay = triggerConditions?.delay ?? 0;
+        triggerData.conditions = triggerConditions ? JSON.stringify(triggerConditions) : null;
+      }
+
+      if (Object.keys(triggerData).length > 0) {
+        await prisma.trigger.update({
+          where: { id: currentTrigger.id },
+          data: triggerData,
+        });
+      }
+    } else if (triggerType) {
+      await prisma.trigger.create({
+        data: {
+          campaignId: id,
+          name: `${campaignNameForTrigger} - Trigger`,
+          type: triggerType,
+          delay: triggerConditions?.delay ?? 0,
+          conditions: triggerConditions ? JSON.stringify(triggerConditions) : null,
+        },
+      });
+    }
+
+    updatedCampaign = await prisma.campaign.findFirst({
+      where: {
+        id,
+        userId: req.user.id,
+      },
+      include: {
+        triggers: true,
+        store: {
+          select: {
+            id: true,
+            shopDomain: true,
+          },
+        },
+        emails: {
+          select: {
+            id: true,
+            status: true,
+            sentAt: true,
+            openedAt: true,
+            clickedAt: true,
+          },
+        },
+      },
+    });
+  }
 
   res.status(200).json(successResponse(withStats(updatedCampaign), 'Campaign updated successfully'));
 });

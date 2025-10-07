@@ -1,14 +1,35 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
-import GlassBackdrop from '../components/GlassBackdrop';
+import { useParams, Link } from 'react-router-dom';
+import Layout from '../components/Layout';
+import Alert from '../components/Alert';
 import api from '../utils/api';
 
 const CampaignDetail = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [campaign, setCampaign] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const goals = {
+    welcome: { label: 'Welcome New Customers', icon: '👋', description: 'Make a warm first impression' },
+    're-engage': { label: 'Re-engage Inactive', icon: '💤', description: 'Win back dormant customers' },
+    upsell: { label: 'Upsell & Cross-sell', icon: '🚀', description: 'Suggest complementary products' },
+    milestone: { label: 'Celebrate Milestones', icon: '🎉', description: 'Acknowledge customer achievements' },
+    nurture: { label: 'Nurture Leads', icon: '🌱', description: 'Build relationships over time' },
+    feedback: { label: 'Request Feedback', icon: '💬', description: 'Gather customer insights' },
+  };
+
+  const triggerTypes = {
+    user_signup: { label: 'User Signup', icon: '👋', description: 'When a new user creates an account' },
+    first_purchase: { label: 'First Purchase', icon: '🛍️', description: "After customer's first purchase" },
+    abandoned_cart: { label: 'Abandoned Cart', icon: '🛒', description: 'When cart is abandoned for 24h' },
+    post_purchase: { label: 'Post Purchase', icon: '📦', description: 'After a purchase is completed' },
+    no_activity: { label: 'No Activity', icon: '💤', description: 'After 30 days of inactivity' },
+    high_value: { label: 'High Value Reached', icon: '⭐', description: 'When customer reaches spending threshold' },
+  };
+
+  const [statusLoading, setStatusLoading] = useState(false);
 
   const fetchCampaign = useCallback(async () => {
     try {
@@ -27,31 +48,42 @@ const CampaignDetail = () => {
     fetchCampaign();
   }, [fetchCampaign]);
 
+  const handleStatusChange = async (newStatus) => {
+    try {
+      setStatusLoading(true);
+      setError('');
+      await api.patch(`/campaigns/${id}/status`, { status: newStatus });
+      setSuccess(`Campaign ${newStatus === 'active' ? 'activated' : newStatus === 'paused' ? 'paused' : 'completed'} successfully!`);
+      await fetchCampaign();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update campaign status');
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="glass-page flex items-center justify-center">
-        <GlassBackdrop />
-        <div className="glass-card flex items-center gap-4">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white/70"></div>
-          <span className="text-white/80">Loading campaign...</span>
+      <Layout>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   if (error && !campaign) {
     return (
-      <div className="glass-page flex items-center justify-center">
-        <GlassBackdrop />
-        <div className="glass-card text-center max-w-lg space-y-4">
-          <div className="text-5xl">⚠️</div>
-          <h3 className="text-2xl font-semibold text-white">Unable to load campaign</h3>
-          <p className="text-sm text-white/70">{error}</p>
-          <Link to="/campaigns" className="glass-button justify-center">
+      <Layout>
+        <div className="glass-card text-center py-16 max-w-lg mx-auto">
+          <div className="text-6xl mb-6">⚠️</div>
+          <h3 className="text-2xl font-bold text-white mb-4">Unable to load campaign</h3>
+          <p className="text-white/70 mb-6">{error}</p>
+          <Link to="/campaigns" className="glass-button inline-flex">
             Back to campaigns
           </Link>
         </div>
-      </div>
+      </Layout>
     );
   }
 
@@ -59,142 +91,285 @@ const CampaignDetail = () => {
     return null;
   }
 
-  const stats = [
-    { label: 'Emails sent', value: campaign.emailsSent },
-    { label: 'Pending', value: campaign.emailsPending },
-    { label: 'Failed', value: campaign.emailsFailed },
-    { label: 'Open rate', value: `${campaign.openRate || 0}%` },
-    { label: 'Click rate', value: `${campaign.clickRate || 0}%` },
-  ];
+  const goalInfo = campaign.goal ? goals[campaign.goal] : null;
+  const triggerInfo = campaign.triggers?.[0]?.type ? triggerTypes[campaign.triggers[0].type] : null;
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'active': return 'bg-green-500/20 border-green-500/40 text-green-100';
+      case 'paused': return 'bg-yellow-500/20 border-yellow-500/40 text-yellow-100';
+      case 'completed': return 'bg-blue-500/20 border-blue-500/40 text-blue-100';
+      default: return 'bg-white/15 border-white/20 text-white/80';
+    }
+  };
 
   return (
-    <div className="glass-page">
-      <GlassBackdrop />
+    <Layout>
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-4">
+          <Link to="/campaigns" className="glass-button">
+            ← Back
+          </Link>
+          <span className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(campaign.status)}`}>
+            {campaign.status}
+          </span>
+        </div>
+        <h1 className="text-4xl font-bold text-white mb-2">{campaign.name}</h1>
+        {campaign.description && (
+          <p className="text-lg text-white/80">{campaign.description}</p>
+        )}
+      </div>
 
-      <div className="glass-nav">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-3">
-                <Link to="/campaigns" className="glass-button bg-white/10 hover:bg-white/20">
-                  ← Back
-                </Link>
-                <span className="px-3 py-1 text-xs rounded-full bg-white/15 border border-white/20 text-white">
-                  {campaign.status}
-                </span>
+      {success && (
+        <div className="mb-6">
+          <Alert type="success" message={success} onClose={() => setSuccess('')} duration={3000} />
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-6">
+          <Alert type="error" message={error} onClose={() => setError('')} duration={5000} />
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Campaign Configuration */}
+          <div className="glass-card">
+            <h2 className="text-2xl font-bold text-white mb-6">Campaign Configuration</h2>
+
+            <div className="space-y-6">
+              {/* Goal */}
+              {goalInfo && (
+                <div>
+                  <h3 className="text-sm font-medium text-white/60 mb-3">Campaign Goal</h3>
+                  <div className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/20">
+                    <span className="text-3xl">{goalInfo.icon}</span>
+                    <div>
+                      <p className="font-semibold text-white text-lg">{goalInfo.label}</p>
+                      <p className="text-sm text-white/70 mt-1">{goalInfo.description}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Trigger */}
+              {triggerInfo && (
+                <div>
+                  <h3 className="text-sm font-medium text-white/60 mb-3">Trigger Event</h3>
+                  <div className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/20">
+                    <span className="text-3xl">{triggerInfo.icon}</span>
+                    <div>
+                      <p className="font-semibold text-white text-lg">{triggerInfo.label}</p>
+                      <p className="text-sm text-white/70 mt-1">{triggerInfo.description}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Store */}
+              <div>
+                <h3 className="text-sm font-medium text-white/60 mb-3">Connected Store</h3>
+                <div className="p-4 rounded-xl bg-white/5 border border-white/20">
+                  <p className="text-white">
+                    {campaign.store ? campaign.store.shopDomain : 'All stores'}
+                  </p>
+                  <p className="text-xs text-white/60 mt-1">
+                    {campaign.store
+                      ? 'Campaign is limited to this specific store'
+                      : 'Campaign runs across all connected stores'}
+                  </p>
+                </div>
               </div>
-              <h1 className="text-3xl font-bold text-white">{campaign.name}</h1>
-              {campaign.description && (
-                <p className="text-sm text-white/70 max-w-2xl">{campaign.description}</p>
+
+              {/* Schedule */}
+              <div>
+                <h3 className="text-sm font-medium text-white/60 mb-3">Schedule</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl bg-white/5 border border-white/20">
+                    <p className="text-xs text-white/60 mb-1">Start Date</p>
+                    <p className="text-white font-medium">
+                      {campaign.startDate ? new Date(campaign.startDate).toLocaleDateString() : 'Immediate'}
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-xl bg-white/5 border border-white/20">
+                    <p className="text-xs text-white/60 mb-1">End Date</p>
+                    <p className="text-white font-medium">
+                      {campaign.endDate ? new Date(campaign.endDate).toLocaleDateString() : 'Always-on'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Performance Stats */}
+          <div className="glass-card">
+            <h2 className="text-2xl font-bold text-white mb-6">Performance</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30">
+                <p className="text-xs font-medium text-white/60 uppercase tracking-wide">Emails Sent</p>
+                <p className="text-3xl font-bold text-white mt-2">{campaign.emailsSent || 0}</p>
+              </div>
+              <div className="p-4 rounded-xl bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border border-yellow-500/30">
+                <p className="text-xs font-medium text-white/60 uppercase tracking-wide">Pending</p>
+                <p className="text-3xl font-bold text-white mt-2">{campaign.emailsPending || 0}</p>
+              </div>
+              <div className="p-4 rounded-xl bg-gradient-to-br from-red-500/20 to-pink-500/20 border border-red-500/30">
+                <p className="text-xs font-medium text-white/60 uppercase tracking-wide">Failed</p>
+                <p className="text-3xl font-bold text-white mt-2">{campaign.emailsFailed || 0}</p>
+              </div>
+              <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30">
+                <p className="text-xs font-medium text-white/60 uppercase tracking-wide">Open Rate</p>
+                <p className="text-3xl font-bold text-white mt-2">{campaign.openRate || 0}%</p>
+              </div>
+              <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
+                <p className="text-xs font-medium text-white/60 uppercase tracking-wide">Click Rate</p>
+                <p className="text-3xl font-bold text-white mt-2">{campaign.clickRate || 0}%</p>
+              </div>
+              <div className="p-4 rounded-xl bg-gradient-to-br from-orange-400/20 to-pink-500/20 border border-orange-500/30">
+                <p className="text-xs font-medium text-white/60 uppercase tracking-wide">Total</p>
+                <p className="text-3xl font-bold text-white mt-2">
+                  {(campaign.emailsSent || 0) + (campaign.emailsPending || 0) + (campaign.emailsFailed || 0)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* AI Info */}
+          <div className="glass-card border-2 border-orange-400/30">
+            <div className="flex items-start gap-3">
+              <span className="text-3xl">🤖</span>
+              <div>
+                <h3 className="text-xl font-bold text-white mb-2">AI-Powered Personalization</h3>
+                <p className="text-sm text-white/70 mb-3">
+                  This campaign uses AI to generate unique, personalized emails for each recipient.
+                  No two customers receive the same message.
+                </p>
+                <ul className="space-y-2 text-sm text-white/70">
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-400">•</span>
+                    <span>Emails are generated based on your brand voice settings</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-400">•</span>
+                    <span>Each message considers the customer's purchase history and behavior</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-orange-400">•</span>
+                    <span>Content adapts to the campaign goal and trigger context</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Status Management */}
+          <div className="glass-card">
+            <h3 className="text-xl font-bold text-white mb-4">Campaign Status</h3>
+            <div className="flex flex-col gap-3">
+              {campaign.status === 'draft' && (
+                <button
+                  onClick={() => handleStatusChange('active')}
+                  disabled={statusLoading}
+                  className="glass-button justify-center bg-green-500/20 border-green-500/40 hover:bg-green-500/30 disabled:opacity-50"
+                >
+                  {statusLoading ? 'Activating...' : '✅ Activate Campaign'}
+                </button>
+              )}
+
+              {campaign.status === 'active' && (
+                <>
+                  <button
+                    onClick={() => handleStatusChange('paused')}
+                    disabled={statusLoading}
+                    className="glass-button justify-center bg-yellow-500/20 border-yellow-500/40 hover:bg-yellow-500/30 disabled:opacity-50"
+                  >
+                    {statusLoading ? 'Pausing...' : '⏸️ Pause Campaign'}
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange('completed')}
+                    disabled={statusLoading}
+                    className="glass-button justify-center bg-blue-500/20 border-blue-500/40 hover:bg-blue-500/30 disabled:opacity-50"
+                  >
+                    {statusLoading ? 'Completing...' : '✓ Mark Complete'}
+                  </button>
+                </>
+              )}
+
+              {campaign.status === 'paused' && (
+                <>
+                  <button
+                    onClick={() => handleStatusChange('active')}
+                    disabled={statusLoading}
+                    className="glass-button justify-center bg-green-500/20 border-green-500/40 hover:bg-green-500/30 disabled:opacity-50"
+                  >
+                    {statusLoading ? 'Resuming...' : '▶️ Resume Campaign'}
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange('completed')}
+                    disabled={statusLoading}
+                    className="glass-button justify-center bg-blue-500/20 border-blue-500/40 hover:bg-blue-500/30 disabled:opacity-50"
+                  >
+                    {statusLoading ? 'Completing...' : '✓ Mark Complete'}
+                  </button>
+                </>
+              )}
+
+              {campaign.status === 'completed' && (
+                <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/30 text-center">
+                  <p className="text-sm text-white/70">This campaign is complete</p>
+                </div>
               )}
             </div>
-            <div className="flex items-center gap-3">
-              <Link to={`/campaigns/${campaign.id}/edit`} className="glass-button">
-                Edit campaign
+          </div>
+
+          {/* Quick Actions */}
+          <div className="glass-card">
+            <h3 className="text-xl font-bold text-white mb-4">Quick Actions</h3>
+            <div className="flex flex-col gap-3">
+              <Link to={`/campaigns/${campaign.id}/edit`} className="glass-button justify-center">
+                Edit Campaign
               </Link>
-              <button
-                type="button"
-                onClick={() => alert('Detailed analytics are coming soon!')}
-                className="glass-button bg-white/10 hover:bg-white/20"
-              >
-                View stats
-              </button>
+              <Link to="/brand-voice" className="glass-button justify-center">
+                Update Brand Voice
+              </Link>
+              <Link to="/campaigns/new" className="glass-button justify-center">
+                Create New Campaign
+              </Link>
             </div>
+          </div>
+
+          {/* Next Steps */}
+          <div className="glass-card">
+            <h3 className="text-xl font-bold text-white mb-4">💡 Next Steps</h3>
+            <ul className="space-y-3 text-sm text-white/70">
+              {campaign.status === 'draft' && (
+                <li className="flex items-start gap-2">
+                  <span className="text-orange-400">•</span>
+                  <span>Activate this campaign to start sending AI-generated emails</span>
+                </li>
+              )}
+              <li className="flex items-start gap-2">
+                <span className="text-orange-400">•</span>
+                <span>Review your brand voice settings to ensure AI matches your tone</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-orange-400">•</span>
+                <span>Check customer insights for additional outreach opportunities</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-orange-400">•</span>
+                <span>Monitor performance metrics to optimize your campaigns</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
-        {error && (
-          <div className="glass-alert border border-red-500/40 text-red-100 bg-red-500/20">
-            {error}
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="glass-card">
-              <h3 className="text-sm uppercase tracking-widest text-white/60 mb-4">Overview</h3>
-              <dl className="space-y-4 text-white/80">
-                <div>
-                  <dt className="text-xs uppercase tracking-widest text-white/60">Trigger type</dt>
-                  <dd className="text-lg font-semibold text-white">
-                    {campaign.triggers?.[0]?.type?.replace('_', ' ') || 'Not configured'}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs uppercase tracking-widest text-white/60">Template</dt>
-                  <dd className="text-lg font-semibold text-white">
-                    {campaign.template?.name || 'Custom'}
-                  </dd>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <dt className="text-xs uppercase tracking-widest text-white/60">Start date</dt>
-                    <dd>{campaign.startDate ? new Date(campaign.startDate).toLocaleDateString() : 'Not set'}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs uppercase tracking-widest text-white/60">End date</dt>
-                    <dd>{campaign.endDate ? new Date(campaign.endDate).toLocaleDateString() : 'Not set'}</dd>
-                  </div>
-                </div>
-                {campaign.triggers?.[0]?.conditions && (
-                  <div>
-                    <dt className="text-xs uppercase tracking-widest text-white/60">Conditions</dt>
-                    <dd>
-                      <pre className="text-sm text-white/80 bg-black/20 rounded-xl p-4 border border-white/10 whitespace-pre-wrap">
-                        {JSON.stringify(campaign.triggers[0].conditions, null, 2)}
-                      </pre>
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            </div>
-
-            <div className="glass-card">
-              <h3 className="text-sm uppercase tracking-widest text-white/60 mb-4">Performance</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {stats.map((stat) => (
-                  <div key={stat.label} className="rounded-2xl bg-white/10 border border-white/15 p-4">
-                    <p className="text-xs uppercase tracking-widest text-white/60">{stat.label}</p>
-                    <p className="text-2xl font-semibold text-white mt-2">{stat.value ?? 0}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div className="glass-card space-y-4">
-              <h3 className="text-xl font-semibold text-white">Next steps</h3>
-              <ul className="space-y-2 text-sm text-white/70 list-disc list-inside">
-                <li>Connect Shopify to enable real triggers.</li>
-                <li>Add a follow-up email for high-intent users.</li>
-                <li>Personalize content using AI suggestions.</li>
-              </ul>
-            </div>
-
-            <div className="glass-card space-y-4">
-              <h3 className="text-xl font-semibold text-white">Quick actions</h3>
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={() => navigate(`/campaigns/${campaign.id}/edit`)}
-                  className="glass-button justify-center"
-                >
-                  Edit campaign
-                </button>
-                <button
-                  onClick={() => navigate('/campaigns/new')}
-                  className="glass-button justify-center bg-white/10 hover:bg-white/20"
-                >
-                  Duplicate campaign
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    </Layout>
   );
 };
 

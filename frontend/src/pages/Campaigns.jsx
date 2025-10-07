@@ -11,10 +11,29 @@ const Campaigns = () => {
 
   const statusFilters = [
     { value: 'all', label: 'All Campaigns', icon: '📊' },
+    { value: 'draft', label: 'Draft', icon: '📝' },
     { value: 'active', label: 'Active', icon: '▶️' },
     { value: 'paused', label: 'Paused', icon: '⏸️' },
     { value: 'completed', label: 'Completed', icon: '✅' },
   ];
+
+  const goals = {
+    welcome: { icon: '👋', label: 'Welcome' },
+    're-engage': { icon: '💤', label: 'Re-engage' },
+    upsell: { icon: '🚀', label: 'Upsell' },
+    milestone: { icon: '🎉', label: 'Milestone' },
+    nurture: { icon: '🌱', label: 'Nurture' },
+    feedback: { icon: '💬', label: 'Feedback' },
+  };
+
+  const triggers = {
+    user_signup: { icon: '👋', label: 'User Signup' },
+    first_purchase: { icon: '🛍️', label: 'First Purchase' },
+    abandoned_cart: { icon: '🛒', label: 'Abandoned Cart' },
+    post_purchase: { icon: '📦', label: 'Post Purchase' },
+    no_activity: { icon: '💤', label: 'No Activity' },
+    high_value: { icon: '⭐', label: 'High Value' },
+  };
 
   const fetchCampaigns = useCallback(async () => {
     try {
@@ -60,12 +79,13 @@ const Campaigns = () => {
 
   const getStatusBadge = (status) => {
     const config = {
+      draft: { text: 'text-white/80', bg: 'bg-white/15', border: 'border-white/20', label: 'Draft' },
       active: { text: 'text-emerald-50', bg: 'bg-emerald-500/30', border: 'border-emerald-300/40', label: 'Active' },
       paused: { text: 'text-yellow-50', bg: 'bg-yellow-500/30', border: 'border-yellow-300/40', label: 'Paused' },
       completed: { text: 'text-cyan-50', bg: 'bg-cyan-500/30', border: 'border-cyan-300/40', label: 'Completed' },
     };
 
-    const styles = config[status] || config.paused;
+    const styles = config[status] || config.draft;
     return (
       <span className={`px-3 py-1 text-xs rounded-full border ${styles.bg} ${styles.text} ${styles.border}`}>
         {styles.label}
@@ -162,35 +182,73 @@ const Campaigns = () => {
                       <p className="text-sm text-white/70 max-w-3xl">{campaign.description}</p>
                     )}
 
-                    <div className="flex flex-wrap items-center gap-5 text-sm text-white/70">
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/70">
+                      {/* Goal */}
+                      {campaign.goal && goals[campaign.goal] && (
+                        <div className="flex items-center gap-2">
+                          <span>{goals[campaign.goal].icon}</span>
+                          <span>{goals[campaign.goal].label}</span>
+                        </div>
+                      )}
+
+                      {/* Trigger */}
+                      {campaign.triggers?.[0]?.type && triggers[campaign.triggers[0].type] && (
+                        <div className="flex items-center gap-2">
+                          <span>{triggers[campaign.triggers[0].type].icon}</span>
+                          <span>{triggers[campaign.triggers[0].type].label}</span>
+                        </div>
+                      )}
+
+                      {/* Store */}
+                      {campaign.store && (
+                        <div className="flex items-center gap-2">
+                          <span>🏪</span>
+                          <span>{campaign.store.shopDomain}</span>
+                        </div>
+                      )}
+
+                      {/* Stats */}
                       <div className="flex items-center gap-2">
                         <span>📨</span>
                         <span>{campaign.emailsSent || 0} sent</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span>⏳</span>
-                        <span>{campaign.emailsPending || 0} pending</span>
-                      </div>
+                      {campaign.emailsPending > 0 && (
+                        <div className="flex items-center gap-2">
+                          <span>⏳</span>
+                          <span>{campaign.emailsPending} pending</span>
+                        </div>
+                      )}
                       {campaign.emailsFailed > 0 && (
                         <div className="flex items-center gap-2 text-red-200">
                           <span>⚠️</span>
                           <span>{campaign.emailsFailed} failed</span>
                         </div>
                       )}
-                      <div className="flex items-center gap-2">
-                        <span>🗓️</span>
-                        <span>Created {new Date(campaign.createdAt).toLocaleDateString()}</span>
-                      </div>
+                      {(campaign.openRate > 0 || campaign.clickRate > 0) && (
+                        <div className="flex items-center gap-2">
+                          <span>📊</span>
+                          <span>{campaign.openRate}% open • {campaign.clickRate}% click</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {campaign.status === 'paused' && (
+                    {campaign.status === 'draft' && (
                       <button
                         onClick={() => handleStatusChange(campaign.id, 'active')}
                         className="glass-button bg-emerald-500/30 hover:bg-emerald-500/40"
                         title="Activate campaign"
+                      >
+                        ✅ Activate
+                      </button>
+                    )}
+                    {campaign.status === 'paused' && (
+                      <button
+                        onClick={() => handleStatusChange(campaign.id, 'active')}
+                        className="glass-button bg-emerald-500/30 hover:bg-emerald-500/40"
+                        title="Resume campaign"
                       >
                         ▶️
                       </button>
@@ -210,13 +268,15 @@ const Campaigns = () => {
                     >
                       View
                     </Link>
-                    <button
-                      onClick={() => handleDelete(campaign.id)}
-                      className="glass-button bg-red-500/30 hover:bg-red-500/40"
-                      title="Delete campaign"
-                    >
-                      Delete
-                    </button>
+                    {campaign.status !== 'completed' && (
+                      <button
+                        onClick={() => handleDelete(campaign.id)}
+                        className="glass-button bg-red-500/30 hover:bg-red-500/40"
+                        title="Delete campaign"
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

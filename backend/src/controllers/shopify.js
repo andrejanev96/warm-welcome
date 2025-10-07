@@ -178,6 +178,7 @@ export const listStores = asyncHandler(async (req, res) => {
 
 export const fetchCustomers = asyncHandler(async (req, res) => {
   const { storeId } = req.params;
+  const { limit = 50 } = req.query;
 
   const store = await prisma.shopifyStore.findFirst({
     where: {
@@ -192,7 +193,7 @@ export const fetchCustomers = asyncHandler(async (req, res) => {
   }
 
   try {
-    const response = await fetch(`https://${store.shopDomain}/admin/api/2024-10/customers.json?limit=10`, {
+    const response = await fetch(`https://${store.shopDomain}/admin/api/2024-10/customers.json?limit=${limit}`, {
       headers: {
         'X-Shopify-Access-Token': store.accessToken,
         'Content-Type': 'application/json',
@@ -206,7 +207,82 @@ export const fetchCustomers = asyncHandler(async (req, res) => {
     }
 
     const data = await response.json();
-    return res.status(200).json(successResponse(data.customers, 'Customers fetched successfully.'));
+    const customers = data.customers || [];
+
+    const emailLookup = new Map();
+    const uniqueEmails = Array.from(
+      new Set(
+        customers
+          .map((customer) => customer.email?.toLowerCase())
+          .filter((email) => Boolean(email))
+      )
+    );
+
+    if (uniqueEmails.length) {
+      const perRecipientLimit = 10;
+      const emailRecords = await prisma.email.findMany({
+        where: {
+          recipientEmail: {
+            in: uniqueEmails,
+          },
+          campaign: {
+            userId: req.user.id,
+            storeId,
+          },
+        },
+        include: {
+          campaign: {
+            select: {
+              id: true,
+              name: true,
+              goal: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      for (const record of emailRecords) {
+        const key = record.recipientEmail.toLowerCase();
+        const existing = emailLookup.get(key) || [];
+
+        if (existing.length < perRecipientLimit) {
+          existing.push(record);
+          emailLookup.set(key, existing);
+        }
+      }
+    }
+
+    const enrichedCustomers = customers.map((customer) => {
+      const key = customer.email?.toLowerCase();
+      const emails = (key && emailLookup.get(key)) || [];
+
+      return {
+        ...customer,
+        emailHistory: emails.map((email) => ({
+          id: email.id,
+          campaignId: email.campaignId,
+          campaignName: email.campaign.name,
+          campaignGoal: email.campaign.goal,
+          subject: email.subject,
+          status: email.status,
+          sentAt: email.sentAt,
+          openedAt: email.openedAt,
+          clickedAt: email.clickedAt,
+          createdAt: email.createdAt,
+        })),
+        emailStats: {
+          total: emails.length,
+          sent: emails.filter((email) => email.status === 'sent').length,
+          opened: emails.filter((email) => email.openedAt).length,
+          clicked: emails.filter((email) => email.clickedAt).length,
+        },
+      };
+    });
+
+    return res.status(200).json(successResponse(enrichedCustomers, 'Customers fetched successfully.'));
   } catch (error) {
     console.error('Error fetching customers:', error);
     return res.status(500).json(errorResponse('Unexpected error fetching customers.'));

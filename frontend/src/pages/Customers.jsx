@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import api from '../utils/api';
@@ -6,6 +6,11 @@ import api from '../utils/api';
 const Customers = () => {
   const [loading, setLoading] = useState(true);
   const [stores, setStores] = useState([]);
+  const [selectedStore, setSelectedStore] = useState(null);
+  const [customers, setCustomers] = useState([]);
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
+  const [error, setError] = useState('');
+  const [expandedCustomer, setExpandedCustomer] = useState(null);
 
   useEffect(() => {
     fetchStores();
@@ -14,15 +19,76 @@ const Customers = () => {
   const fetchStores = async () => {
     try {
       const response = await api.get('/shopify/stores');
-      setStores(response.data.data || []);
+      const activeStores = (response.data.data || []).filter(store => store.isActive);
+      setStores(activeStores);
+
+      // Auto-select first active store
+      if (activeStores.length > 0) {
+        setSelectedStore(activeStores[0].id);
+      }
     } catch (err) {
       console.error('Error fetching stores:', err);
+      setError('Failed to load stores');
     } finally {
       setLoading(false);
     }
   };
 
-  const hasActiveStore = stores.some(store => store.isActive);
+  const fetchCustomers = useCallback(async () => {
+    if (!selectedStore) return;
+
+    try {
+      setLoadingCustomers(true);
+      setError('');
+      const response = await api.get(`/shopify/stores/${selectedStore}/customers`);
+      setCustomers(response.data.data || []);
+    } catch (err) {
+      console.error('Error fetching customers:', err);
+      setError('Failed to load customers');
+    } finally {
+      setLoadingCustomers(false);
+    }
+  }, [selectedStore]);
+
+  useEffect(() => {
+    if (selectedStore) {
+      fetchCustomers();
+    }
+  }, [selectedStore, fetchCustomers]);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Never';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return 'Never';
+    return new Date(dateString).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  };
+
+  const getStatusBadge = (status) => {
+    const config = {
+      sent: { bg: 'bg-green-500/20', border: 'border-green-500/40', text: 'text-green-100', label: 'Sent' },
+      pending: { bg: 'bg-yellow-500/20', border: 'border-yellow-500/40', text: 'text-yellow-100', label: 'Pending' },
+      failed: { bg: 'bg-red-500/20', border: 'border-red-500/40', text: 'text-red-100', label: 'Failed' },
+    };
+    const styles = config[status] || config.pending;
+    return (
+      <span className={`px-2 py-1 text-xs rounded-full border ${styles.bg} ${styles.border} ${styles.text}`}>
+        {styles.label}
+      </span>
+    );
+  };
 
   if (loading) {
     return (
@@ -34,6 +100,8 @@ const Customers = () => {
     );
   }
 
+  const hasActiveStore = stores.length > 0;
+
   if (!hasActiveStore) {
     return (
       <Layout>
@@ -42,7 +110,7 @@ const Customers = () => {
             👥 Customers
           </h1>
           <p className="text-lg text-white/80">
-            AI-powered insights and suggested outreach opportunities
+            View customers and email history from your connected stores
           </p>
         </div>
 
@@ -50,7 +118,7 @@ const Customers = () => {
           <div className="text-6xl mb-6">🔌</div>
           <h3 className="text-2xl font-bold text-white mb-4">Connect Your Store First</h3>
           <p className="text-white/70 mb-6 max-w-md mx-auto">
-            To analyze customers and suggest outreach opportunities, connect your Shopify store first.
+            To view customers and their email history, connect your Shopify store first.
           </p>
           <Link to="/integrations" className="glass-button inline-flex">
             Connect Shopify Store
@@ -67,143 +135,157 @@ const Customers = () => {
           👥 Customers
         </h1>
         <p className="text-lg text-white/80">
-          AI-powered insights and suggested outreach opportunities
+          View customers and email history from your connected stores
         </p>
       </div>
 
-      {/* AI Suggestions */}
-      <div className="glass-card mb-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center shadow-lg">
-            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white">AI Suggestions</h2>
-            <p className="text-sm text-white/70">Opportunities to connect with your customers</p>
-          </div>
+      {/* Store Selector */}
+      {stores.length > 1 && (
+        <div className="glass-card mb-6">
+          <label htmlFor="store" className="block text-sm font-medium text-white/90 mb-2">
+            Select Store
+          </label>
+          <select
+            id="store"
+            value={selectedStore || ''}
+            onChange={(e) => setSelectedStore(e.target.value)}
+            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+          >
+            {stores.map((store) => (
+              <option key={store.id} value={store.id}>
+                {store.shopDomain}
+              </option>
+            ))}
+          </select>
         </div>
+      )}
 
+      {error && (
+        <div className="mb-6 glass-card bg-red-500/10 border-2 border-red-500/40">
+          <p className="text-red-100">{error}</p>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loadingCustomers ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+        </div>
+      ) : customers.length === 0 ? (
+        /* Empty State */
+        <div className="glass-card text-center py-16">
+          <div className="text-6xl mb-6">📭</div>
+          <h3 className="text-2xl font-bold text-white mb-4">No Customers Found</h3>
+          <p className="text-white/70 mb-6 max-w-md mx-auto">
+            This store doesn't have any customers yet, or they haven't been synced.
+          </p>
+        </div>
+      ) : (
+        /* Customers List */
         <div className="space-y-4">
-          {/* Example suggestions - these would be AI-generated */}
-          <div className="p-5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">🎉</span>
-                  <h3 className="font-semibold text-white text-lg">VIP Milestone Opportunity</h3>
-                </div>
-                <p className="text-white/80 mb-3">
-                  <strong>Sarah Martinez</strong> just reached $1,000 in lifetime purchases.
-                  Perfect time to send a personalized thank you with a special offer.
-                </p>
-                <div className="flex items-center gap-3 text-sm text-white/60">
-                  <span>💰 $1,047 lifetime value</span>
-                  <span>•</span>
-                  <span>📦 8 orders</span>
-                  <span>•</span>
-                  <span>⭐ Last order: 3 days ago</span>
-                </div>
-              </div>
-              <button className="glass-button whitespace-nowrap">
-                Generate Email
-              </button>
-            </div>
-          </div>
+          {customers.map((customer) => (
+            <div
+              key={customer.id}
+              className="glass-card hover:translate-y-[-2px] transition-all"
+            >
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                {/* Customer Info */}
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <h3 className="text-xl font-semibold text-white">
+                      {customer.first_name} {customer.last_name}
+                    </h3>
+                    {customer.verified_email && (
+                      <span className="px-2 py-1 text-xs rounded-full bg-green-500/20 border border-green-500/40 text-green-100">
+                        ✓ Verified
+                      </span>
+                    )}
+                  </div>
 
-          <div className="p-5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">💤</span>
-                  <h3 className="font-semibold text-white text-lg">Re-engagement Opportunity</h3>
-                </div>
-                <p className="text-white/80 mb-3">
-                  <strong>12 customers</strong> haven't purchased in 60+ days but were previously active.
-                  Win them back with personalized recommendations.
-                </p>
-                <div className="flex items-center gap-3 text-sm text-white/60">
-                  <span>💰 $8,400 potential revenue</span>
-                  <span>•</span>
-                  <span>📊 Previously ordered 2-5x</span>
-                </div>
-              </div>
-              <button className="glass-button whitespace-nowrap">
-                Create Campaign
-              </button>
-            </div>
-          </div>
+                  <p className="text-white/70 text-sm">{customer.email}</p>
 
-          <div className="p-5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">🛒</span>
-                  <h3 className="font-semibold text-white text-lg">Upsell Opportunity</h3>
+                  <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/60">
+                    <div className="flex items-center gap-2">
+                      <span>💰</span>
+                      <span>${customer.total_spent || '0.00'} spent</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>📦</span>
+                      <span>{customer.orders_count || 0} orders</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>📧</span>
+                      <span>{customer.emailStats?.total || 0} emails sent</span>
+                    </div>
+                    {customer.emailStats && customer.emailStats.opened > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span>👀</span>
+                        <span>{customer.emailStats.opened} opened</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <span>📅</span>
+                      <span>Joined {formatDate(customer.created_at)}</span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-white/80 mb-3">
-                  <strong>Mike Chen</strong> bought your starter kit 30 days ago.
-                  Based on his purchase history, he's ready for the premium upgrade.
-                </p>
-                <div className="flex items-center gap-3 text-sm text-white/60">
-                  <span>💰 $89 average order</span>
-                  <span>•</span>
-                  <span>📦 3 orders</span>
-                  <span>•</span>
-                  <span>🎯 High engagement</span>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => setExpandedCustomer(expandedCustomer === customer.id ? null : customer.id)}
+                    className="glass-button"
+                  >
+                    {expandedCustomer === customer.id ? 'Hide History' : 'View History'}
+                  </button>
                 </div>
               </div>
-              <button className="glass-button whitespace-nowrap">
-                Generate Email
-              </button>
+
+              {/* Email History (Expanded) */}
+              {expandedCustomer === customer.id && (
+                <div className="mt-6 pt-6 border-t border-white/10">
+                  <h4 className="text-lg font-bold text-white mb-4">Email History</h4>
+
+                  {customer.emailHistory && customer.emailHistory.length > 0 ? (
+                    <div className="space-y-3">
+                      {customer.emailHistory.map((email) => (
+                        <div
+                          key={email.id}
+                          className="p-4 rounded-xl bg-white/5 border border-white/10"
+                        >
+                          <div className="flex items-start justify-between gap-4 mb-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Link
+                                  to={`/campaigns/${email.campaignId}`}
+                                  className="font-semibold text-white hover:text-white/80 transition-colors"
+                                >
+                                  {email.campaignName}
+                                </Link>
+                                {getStatusBadge(email.status)}
+                              </div>
+                              <p className="text-sm text-white/70">{email.subject}</p>
+                            </div>
+                            <div className="text-right text-xs text-white/60">
+                              {email.sentAt && <div>Sent: {formatDateTime(email.sentAt)}</div>}
+                              {email.openedAt && <div className="text-green-300">Opened: {formatDateTime(email.openedAt)}</div>}
+                              {email.clickedAt && <div className="text-blue-300">Clicked: {formatDateTime(email.clickedAt)}</div>}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-white/60">
+                      <p>No emails sent to this customer yet</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
+          ))}
         </div>
-      </div>
-
-      {/* Customer Segments */}
-      <div className="glass-card">
-        <h2 className="text-2xl font-bold text-white mb-6">Customer Segments</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30">
-            <div className="text-3xl mb-2">⭐</div>
-            <div className="text-3xl font-bold text-white mb-1">24</div>
-            <div className="text-sm font-medium text-white/90">VIP Customers</div>
-            <div className="text-xs text-white/60 mt-1">$500+ lifetime value</div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30">
-            <div className="text-3xl mb-2">🔥</div>
-            <div className="text-3xl font-bold text-white mb-1">89</div>
-            <div className="text-sm font-medium text-white/90">Active Customers</div>
-            <div className="text-xs text-white/60 mt-1">Purchased in last 30 days</div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border border-yellow-500/30">
-            <div className="text-3xl mb-2">💡</div>
-            <div className="text-3xl font-bold text-white mb-1">43</div>
-            <div className="text-sm font-medium text-white/90">At-Risk</div>
-            <div className="text-xs text-white/60 mt-1">No purchase in 60+ days</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Coming Soon Notice */}
-      <div className="glass-card mt-6 border-2 border-orange-400/30">
-        <div className="flex items-start gap-4">
-          <div className="text-3xl">🚀</div>
-          <div>
-            <h3 className="text-xl font-bold text-white mb-2">More AI Features Coming Soon</h3>
-            <p className="text-white/70 text-sm">
-              We're building advanced customer analytics, behavior prediction,
-              and personalized recommendation engines. This is just the beginning of
-              your AI co-pilot for customer relationships.
-            </p>
-          </div>
-        </div>
-      </div>
+      )}
     </Layout>
   );
 };

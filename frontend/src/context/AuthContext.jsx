@@ -19,14 +19,59 @@ export const AuthProvider = ({ children }) => {
 
   // Load user from localStorage on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('token');
+    let isMounted = true;
 
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
+    const bootstrap = async () => {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch (error) {
+          console.error('Failed to parse stored user profile', error);
+          localStorage.removeItem('user');
+        }
+      }
+
+      const storedToken = localStorage.getItem('token');
+
+      if (!storedToken) {
+        if (isMounted) {
+          setUser(null);
+          setToken(null);
+          setLoading(false);
+        }
+        return;
+      }
+
       setToken(storedToken);
-    }
-    setLoading(false);
+
+      try {
+        const response = await authAPI.getProfile();
+        if (!isMounted) return;
+
+        const userData = response.data?.data;
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+      } catch (err) {
+        console.warn('Auth session validation failed', err);
+        if (!isMounted) return;
+
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    bootstrap();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const login = async (email, password) => {

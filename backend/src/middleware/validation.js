@@ -72,31 +72,6 @@ export const authSchemas = {
 };
 
 /**
- * Template validation schemas
- */
-export const templateSchemas = {
-  create: Joi.object({
-    name: Joi.string().required().messages({
-      'any.required': 'Template name is required',
-    }),
-    subject: Joi.string().required().messages({
-      'any.required': 'Email subject is required',
-    }),
-    body: Joi.string().required().messages({
-      'any.required': 'Email body is required',
-    }),
-    category: Joi.string().optional().valid('welcome', 'engagement', 'purchase', 'abandoned_cart', 'general'),
-  }),
-
-  update: Joi.object({
-    name: Joi.string().optional(),
-    subject: Joi.string().optional(),
-    body: Joi.string().optional(),
-    category: Joi.string().optional().valid('welcome', 'engagement', 'purchase', 'abandoned_cart', 'general'),
-  }),
-};
-
-/**
  * Campaign validation schemas
  */
 export const campaignSchemas = {
@@ -105,19 +80,16 @@ export const campaignSchemas = {
       'any.required': 'Campaign name is required',
     }),
     description: Joi.string().optional().allow(''),
-    templateId: Joi.string().required().messages({
-      'any.required': 'Template ID is required',
-    }),
-    triggerType: Joi.string().required().valid(
+    goal: Joi.string().optional().valid('welcome', 're-engage', 'upsell', 'milestone', 'nurture', 'feedback'),
+    storeId: Joi.string().optional().allow(null),
+    triggerType: Joi.string().optional().valid(
       'user_signup',
       'first_purchase',
       'abandoned_cart',
       'post_purchase',
-      'engagement',
-      'custom'
-    ).messages({
-      'any.required': 'Trigger type is required',
-    }),
+      'no_activity',
+      'high_value'
+    ),
     triggerConditions: Joi.object().optional(),
     startDate: Joi.date().optional().allow(null),
     endDate: Joi.date().optional().allow(null).min(Joi.ref('startDate')).messages({
@@ -128,15 +100,21 @@ export const campaignSchemas = {
   update: Joi.object({
     name: Joi.string().optional(),
     description: Joi.string().optional().allow(''),
-    templateId: Joi.string().optional(),
+    goal: Joi.string().optional().valid('welcome', 're-engage', 'upsell', 'milestone', 'nurture', 'feedback'),
+    storeId: Joi.string().optional().allow(null),
     startDate: Joi.date().optional().allow(null),
     endDate: Joi.date().optional().allow(null),
+    triggerType: Joi.string()
+      .valid('user_signup', 'first_purchase', 'abandoned_cart', 'post_purchase', 'no_activity', 'high_value')
+      .optional()
+      .allow(null),
+    triggerConditions: Joi.object().optional().allow(null),
   }),
 
   updateStatus: Joi.object({
-    status: Joi.string().required().valid('active', 'paused', 'completed').messages({
+    status: Joi.string().required().valid('active', 'paused', 'completed', 'draft').messages({
       'any.required': 'Status is required',
-      'any.only': 'Status must be: active, paused, or completed',
+      'any.only': 'Status must be: draft, active, paused, or completed',
     }),
   }),
 };

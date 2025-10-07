@@ -30,7 +30,8 @@
     "jsonwebtoken": "^9.0.2",
     "joi": "^17.11.0",
     "@prisma/client": "^5.7.1",
-    "express-rate-limit": "^7.1.5"
+    "express-rate-limit": "^7.1.5",
+    "nodemailer": "^6.9.14"
   },
   "devDependencies": {
     "nodemon": "^3.0.2",
