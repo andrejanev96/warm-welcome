@@ -1,6 +1,6 @@
 import express from 'express';
 import authRoutes from './auth.js';
-import templateRoutes from './templates.js';
+import brandVoiceRoutes from './brandVoice.js';
 import campaignRoutes from './campaigns.js';
 import shopifyRoutes from './shopify.js';
 
@@ -17,7 +17,7 @@ router.get('/health', (req, res) => {
 
 // API routes
 router.use('/auth', authRoutes);
-router.use('/templates', templateRoutes);
+router.use('/brand-voice', brandVoiceRoutes);
 router.use('/campaigns', campaignRoutes);
 router.use('/shopify', shopifyRoutes);
 

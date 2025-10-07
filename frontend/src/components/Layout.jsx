@@ -62,14 +62,24 @@ const Layout = ({ children }) => {
                   Campaigns
                 </Link>
                 <Link
-                  to="/templates"
+                  to="/customers"
                   className={`text-sm font-medium transition-all ${
-                    isActive('/templates')
+                    isActive('/customers')
                       ? 'text-white border-b-2 border-white pb-1'
                       : 'text-white/70 hover:text-white'
                   }`}
                 >
-                  Templates
+                  Customers
+                </Link>
+                <Link
+                  to="/brand-voice"
+                  className={`text-sm font-medium transition-all ${
+                    isActive('/brand-voice')
+                      ? 'text-white border-b-2 border-white pb-1'
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  Brand Voice
                 </Link>
                 <Link
                   to="/integrations"

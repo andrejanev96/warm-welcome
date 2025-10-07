@@ -6,9 +6,8 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
-import Templates from './pages/Templates';
-import TemplateForm from './pages/TemplateForm';
-import TemplateDetail from './pages/TemplateDetail';
+import BrandVoice from './pages/BrandVoice';
+import Customers from './pages/Customers';
 import Campaigns from './pages/Campaigns';
 import CampaignForm from './pages/CampaignForm';
 import CampaignDetail from './pages/CampaignDetail';
@@ -33,34 +32,18 @@ function App() {
             }
           />
           <Route
-            path="/templates"
+            path="/brand-voice"
             element={
               <ProtectedRoute>
-                <Templates />
+                <BrandVoice />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/templates/new"
+            path="/customers"
             element={
               <ProtectedRoute>
-                <TemplateForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/templates/:id/edit"
-            element={
-              <ProtectedRoute>
-                <TemplateForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/templates/:id"
-            element={
-              <ProtectedRoute>
-                <TemplateDetail />
+                <Customers />
               </ProtectedRoute>
             }
           />

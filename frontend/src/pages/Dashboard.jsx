@@ -261,11 +261,11 @@ const Dashboard = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Link to="/templates" className="glass-card hover:scale-105 transition-transform group">
+            <Link to="/customers" className="glass-card hover:scale-105 transition-transform group">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-bold text-white mb-2">📧 Email Templates</h3>
-                  <p className="text-white/70">Create and manage personalized email templates</p>
+                  <h3 className="text-2xl font-bold text-white mb-2">👥 Customers</h3>
+                  <p className="text-white/70">View insights and AI-suggested outreach opportunities</p>
                 </div>
                 <svg
                   className="w-8 h-8 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all"
@@ -282,7 +282,7 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-2xl font-bold text-white mb-2">🚀 Campaigns</h3>
-                  <p className="text-white/70">Set up automated email campaigns</p>
+                  <p className="text-white/70">Set up AI-powered email campaigns</p>
                 </div>
                 <svg
                   className="w-8 h-8 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all"
@@ -317,34 +317,40 @@ const Dashboard = () => {
                 </svg>
               </Link>
 
-              <div className="flex items-start gap-4 p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+              <Link
+                to="/brand-voice"
+                className="flex items-start gap-4 p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
+              >
                 <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
                   2
                 </div>
-                <div>
-                  <h4 className="font-semibold text-white text-lg">Create your first campaign</h4>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-white text-lg">Define your brand voice</h4>
                   <p className="text-sm text-white/70 mt-1">
-                    Set up behavioral triggers and email templates
+                    Teach AI how to write emails that sound like you
                   </p>
                 </div>
-              </div>
+                <svg className="w-5 h-5 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
 
               <div className="flex items-start gap-4 p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
                 <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
                   3
                 </div>
                 <div>
-                  <h4 className="font-semibold text-white text-lg">Let AI personalize your emails</h4>
+                  <h4 className="font-semibold text-white text-lg">Launch AI-powered campaigns</h4>
                   <p className="text-sm text-white/70 mt-1">
-                    Watch your engagement rates soar with warm, human-feeling emails
+                    Set triggers and let AI generate unique emails for each customer
                   </p>
                 </div>
               </div>
             </div>
 
             <div className="mt-6 flex gap-3">
-              <Link to="/templates/new" className="glass-button flex-1 justify-center">
-                Create Template
+              <Link to="/brand-voice" className="glass-button flex-1 justify-center">
+                Setup Brand Voice
               </Link>
               <Link to="/campaigns/new" className="glass-button flex-1 justify-center">
                 Start Campaign

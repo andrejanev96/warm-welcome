@@ -22,9 +22,9 @@ model User {
   passwordResetExpires DateTime?
 
   // Relations (for future use)
-  stores    ShopifyStore[]
-  campaigns Campaign[]
-  templates EmailTemplate[]
+  stores     ShopifyStore[]
+  campaigns  Campaign[]
+  brandVoice BrandVoice?
 
   @@map("users")
 }
@@ -50,19 +50,18 @@ model Campaign {
   id          String    @id @default(uuid())
   userId      String
   storeId     String?
-  templateId  String?
   name        String
   description String?
-  status      String    @default("draft") // draft, active, paused, archived
+  goal        String? // welcome, re-engage, upsell, milestone, etc.
+  status      String    @default("draft") // draft, active, paused, completed
   startDate   DateTime?
   endDate     DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   // Relations
-  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  store    ShopifyStore?  @relation(fields: [storeId], references: [id], onDelete: SetNull)
-  template EmailTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store    ShopifyStore? @relation(fields: [storeId], references: [id], onDelete: SetNull)
   triggers Trigger[]
   emails   Email[]
 
@@ -85,44 +84,44 @@ model Trigger {
   @@map("triggers")
 }
 
-model EmailTemplate {
-  id        String   @id @default(uuid())
-  userId    String?
-  name      String
-  subject   String
-  body      String
-  category  String? // welcome, engagement, purchase, etc.
-  isDefault Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model BrandVoice {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  businessName        String?
+  businessDescription String?
+  tone                String? // warm, professional, playful, friendly, etc.
+  values              String? // JSON array of key values
+  talkingPoints       String? // JSON array of USPs, policies, etc.
+  dosDonts            String? // JSON object with do's and don'ts
+  exampleCopy         String? // Example of their best communication
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   // Relations
-  emails    Email[]
-  campaigns Campaign[]
-  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("email_templates")
+  @@map("brand_voice")
 }
 
 model Email {
   id             String    @id @default(uuid())
   campaignId     String
-  templateId     String?
   recipientEmail String
+  recipientName  String?
   subject        String
   body           String
+  aiGenerated    Boolean   @default(true)
   status         String    @default("pending") // pending, sent, failed, delivered, opened, clicked
   sentAt         DateTime?
   openedAt       DateTime?
   clickedAt      DateTime?
   errorMessage   String?
-  metadata       String? // Additional data as JSON string
+  metadata       String? // Additional data as JSON string (customer context, AI prompt used, etc.)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
   // Relations
-  campaign Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  template EmailTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@map("emails")
 }

@@ -54,18 +54,18 @@ export const getCampaigns = asyncHandler(async (req, res) => {
         select: {
           id: true,
           status: true,
+          sentAt: true,
           openedAt: true,
           clickedAt: true,
         },
       },
-      template: {
+      triggers: true,
+      store: {
         select: {
           id: true,
-          name: true,
-          category: true,
+          shopDomain: true,
         },
       },
-      triggers: true,
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -88,8 +88,13 @@ export const getCampaign = asyncHandler(async (req, res) => {
     },
     include: {
       emails: true,
-      template: true,
       triggers: true,
+      store: {
+        select: {
+          id: true,
+          shopDomain: true,
+        },
+      },
     },
   });
 
@@ -104,24 +109,25 @@ export const getCampaign = asyncHandler(async (req, res) => {
  * Create new campaign
  */
 export const createCampaign = asyncHandler(async (req, res) => {
-  const { name, description, templateId, triggerType, triggerConditions, startDate, endDate } = req.body;
+  const { name, description, goal, storeId, triggerType, triggerConditions, startDate, endDate } = req.body;
 
-  if (!templateId) {
-    return res.status(400).json(errorResponse('Template is required'));
+  if (!name) {
+    return res.status(400).json(errorResponse('Campaign name is required'));
   }
 
-  const template = await prisma.emailTemplate.findFirst({
-    where: {
-      id: templateId,
-      OR: [
-        { userId: req.user.id },
-        { isDefault: true },
-      ],
-    },
-  });
+  // Validate store if provided
+  if (storeId) {
+    const store = await prisma.shopifyStore.findFirst({
+      where: {
+        id: storeId,
+        userId: req.user.id,
+        isActive: true,
+      },
+    });
 
-  if (!template) {
-    return res.status(404).json(errorResponse('Template not found'));
+    if (!store) {
+      return res.status(404).json(errorResponse('Store not found or inactive'));
+    }
   }
 
   let campaign;
@@ -131,27 +137,34 @@ export const createCampaign = asyncHandler(async (req, res) => {
       data: {
         name,
         description: description?.trim() ? description : null,
-        status: 'paused',
+        goal: goal || null,
+        status: 'draft',
         userId: req.user.id,
+        storeId: storeId || null,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
-        templateId: template.id,
-        triggers: {
+        triggers: triggerType ? {
           create: {
             name: `${name} - Trigger`,
             type: triggerType,
             delay: triggerConditions?.delay ?? 0,
             conditions: triggerConditions ? JSON.stringify(triggerConditions) : null,
           },
-        },
+        } : undefined,
       },
       include: {
-        template: true,
         triggers: true,
+        store: {
+          select: {
+            id: true,
+            shopDomain: true,
+          },
+        },
         emails: {
           select: {
             id: true,
             status: true,
+            sentAt: true,
             openedAt: true,
             clickedAt: true,
           },
@@ -171,7 +184,7 @@ export const createCampaign = asyncHandler(async (req, res) => {
  */
 export const updateCampaign = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, description, templateId, startDate, endDate } = req.body;
+  const { name, description, goal, storeId, startDate, endDate } = req.body;
 
   const existingCampaign = await prisma.campaign.findFirst({
     where: {
@@ -194,6 +207,10 @@ export const updateCampaign = asyncHandler(async (req, res) => {
     data.description = description?.trim() ? description : null;
   }
 
+  if (goal !== undefined) {
+    data.goal = goal || null;
+  }
+
   if (startDate !== undefined) {
     data.startDate = startDate ? new Date(startDate) : null;
   }
@@ -202,34 +219,39 @@ export const updateCampaign = asyncHandler(async (req, res) => {
     data.endDate = endDate ? new Date(endDate) : null;
   }
 
-  if (templateId) {
-    const template = await prisma.emailTemplate.findFirst({
-      where: {
-        id: templateId,
-        OR: [
-          { userId: req.user.id },
-          { isDefault: true },
-        ],
-      },
-    });
+  if (storeId !== undefined) {
+    if (storeId) {
+      const store = await prisma.shopifyStore.findFirst({
+        where: {
+          id: storeId,
+          userId: req.user.id,
+          isActive: true,
+        },
+      });
 
-    if (!template) {
-      return res.status(404).json(errorResponse('Template not found'));
+      if (!store) {
+        return res.status(404).json(errorResponse('Store not found or inactive'));
+      }
     }
-
-    data.templateId = template.id;
+    data.storeId = storeId || null;
   }
 
   const updatedCampaign = await prisma.campaign.update({
     where: { id },
     data,
     include: {
-      template: true,
       triggers: true,
+      store: {
+        select: {
+          id: true,
+          shopDomain: true,
+        },
+      },
       emails: {
         select: {
           id: true,
           status: true,
+          sentAt: true,
           openedAt: true,
           clickedAt: true,
         },
@@ -247,8 +269,8 @@ export const updateCampaignStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  if (!['active', 'paused', 'completed'].includes(status)) {
-    return res.status(400).json(errorResponse('Invalid status. Must be: active, paused, or completed'));
+  if (!['active', 'paused', 'completed', 'draft'].includes(status)) {
+    return res.status(400).json(errorResponse('Invalid status. Must be: draft, active, paused, or completed'));
   }
 
   const campaign = await prisma.campaign.findFirst({
@@ -266,12 +288,18 @@ export const updateCampaignStatus = asyncHandler(async (req, res) => {
     where: { id },
     data: { status },
     include: {
-      template: true,
       triggers: true,
+      store: {
+        select: {
+          id: true,
+          shopDomain: true,
+        },
+      },
       emails: {
         select: {
           id: true,
           status: true,
+          sentAt: true,
           openedAt: true,
           clickedAt: true,
         },
