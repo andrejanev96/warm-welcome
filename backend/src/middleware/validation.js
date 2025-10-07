@@ -82,6 +82,7 @@ export const campaignSchemas = {
     description: Joi.string().optional().allow(''),
     goal: Joi.string().optional().valid('welcome', 're-engage', 'upsell', 'milestone', 'nurture', 'feedback'),
     storeId: Joi.string().optional().allow(null),
+    blueprintId: Joi.string().optional().allow(null),
     triggerType: Joi.string().optional().valid(
       'user_signup',
       'first_purchase',
@@ -102,6 +103,7 @@ export const campaignSchemas = {
     description: Joi.string().optional().allow(''),
     goal: Joi.string().optional().valid('welcome', 're-engage', 'upsell', 'milestone', 'nurture', 'feedback'),
     storeId: Joi.string().optional().allow(null),
+    blueprintId: Joi.string().optional().allow(null),
     startDate: Joi.date().optional().allow(null),
     endDate: Joi.date().optional().allow(null),
     triggerType: Joi.string()

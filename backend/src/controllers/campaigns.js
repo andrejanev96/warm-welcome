@@ -1,5 +1,6 @@
 import prisma from '../utils/database.js';
 import { asyncHandler, successResponse, errorResponse } from '../utils/helpers.js';
+import { logger } from '../utils/logger.js';
 
 const parseConditions = (value) => {
   if (!value) return null;
@@ -66,6 +67,13 @@ export const getCampaigns = asyncHandler(async (req, res) => {
           shopDomain: true,
         },
       },
+      blueprint: {
+        select: {
+          id: true,
+          name: true,
+          category: true,
+        },
+      },
     },
     orderBy: { createdAt: 'desc' },
   });
@@ -95,6 +103,17 @@ export const getCampaign = asyncHandler(async (req, res) => {
           shopDomain: true,
         },
       },
+      blueprint: {
+        select: {
+          id: true,
+          name: true,
+          category: true,
+          subjectPattern: true,
+          structure: true,
+          variables: true,
+          optionalVars: true,
+        },
+      },
     },
   });
 
@@ -109,7 +128,7 @@ export const getCampaign = asyncHandler(async (req, res) => {
  * Create new campaign
  */
 export const createCampaign = asyncHandler(async (req, res) => {
-  const { name, description, goal, storeId, triggerType, triggerConditions, startDate, endDate } = req.body;
+  const { name, description, goal, storeId, blueprintId, triggerType, triggerConditions, startDate, endDate } = req.body;
 
   if (!name) {
     return res.status(400).json(errorResponse('Campaign name is required'));
@@ -130,6 +149,20 @@ export const createCampaign = asyncHandler(async (req, res) => {
     }
   }
 
+  // Validate blueprint if provided
+  if (blueprintId) {
+    const blueprint = await prisma.emailBlueprint.findFirst({
+      where: {
+        id: blueprintId,
+        userId: req.user.id,
+      },
+    });
+
+    if (!blueprint) {
+      return res.status(404).json(errorResponse('Blueprint not found'));
+    }
+  }
+
   let campaign;
 
   try {
@@ -141,6 +174,7 @@ export const createCampaign = asyncHandler(async (req, res) => {
         status: 'draft',
         userId: req.user.id,
         storeId: storeId || null,
+        blueprintId: blueprintId || null,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
         triggers: triggerType ? {
@@ -160,6 +194,13 @@ export const createCampaign = asyncHandler(async (req, res) => {
             shopDomain: true,
           },
         },
+        blueprint: {
+          select: {
+            id: true,
+            name: true,
+            category: true,
+          },
+        },
         emails: {
           select: {
             id: true,
@@ -172,7 +213,7 @@ export const createCampaign = asyncHandler(async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('createCampaign error', error);
+    logger.error('createCampaign error', error);
     throw error;
   }
 
@@ -184,7 +225,7 @@ export const createCampaign = asyncHandler(async (req, res) => {
  */
 export const updateCampaign = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, description, goal, storeId, startDate, endDate, triggerType, triggerConditions } = req.body;
+  const { name, description, goal, storeId, blueprintId, startDate, endDate, triggerType, triggerConditions } = req.body;
 
   const existingCampaign = await prisma.campaign.findFirst({
     where: {
@@ -236,6 +277,22 @@ export const updateCampaign = asyncHandler(async (req, res) => {
     data.storeId = storeId || null;
   }
 
+  if (blueprintId !== undefined) {
+    if (blueprintId) {
+      const blueprint = await prisma.emailBlueprint.findFirst({
+        where: {
+          id: blueprintId,
+          userId: req.user.id,
+        },
+      });
+
+      if (!blueprint) {
+        return res.status(404).json(errorResponse('Blueprint not found'));
+      }
+    }
+    data.blueprintId = blueprintId || null;
+  }
+
   let updatedCampaign = await prisma.campaign.update({
     where: { id },
     data,
@@ -245,6 +302,13 @@ export const updateCampaign = asyncHandler(async (req, res) => {
         select: {
           id: true,
           shopDomain: true,
+        },
+      },
+      blueprint: {
+        select: {
+          id: true,
+          name: true,
+          category: true,
         },
       },
       emails: {
@@ -319,6 +383,13 @@ export const updateCampaign = asyncHandler(async (req, res) => {
             shopDomain: true,
           },
         },
+        blueprint: {
+          select: {
+            id: true,
+            name: true,
+            category: true,
+          },
+        },
         emails: {
           select: {
             id: true,
@@ -366,6 +437,13 @@ export const updateCampaignStatus = asyncHandler(async (req, res) => {
         select: {
           id: true,
           shopDomain: true,
+        },
+      },
+      blueprint: {
+        select: {
+          id: true,
+          name: true,
+          category: true,
         },
       },
       emails: {

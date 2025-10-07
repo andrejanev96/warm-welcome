@@ -25,6 +25,7 @@ model User {
   stores     ShopifyStore[]
   campaigns  Campaign[]
   brandVoice BrandVoice?
+  emailBlueprints EmailBlueprint[]
   passwordResetAudits PasswordResetAudit[]
 
   @@map("users")
@@ -44,6 +45,7 @@ model ShopifyStore {
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   campaigns Campaign[]
 
+  @@index([userId], name: "shopify_stores_user_id_idx")
   @@map("shopify_stores")
 }
 
@@ -51,6 +53,7 @@ model Campaign {
   id          String    @id @default(uuid())
   userId      String
   storeId     String?
+  blueprintId String?
   name        String
   description String?
   goal        String? // welcome, re-engage, upsell, milestone, etc.
@@ -61,11 +64,16 @@ model Campaign {
   updatedAt   DateTime  @updatedAt
 
   // Relations
-  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  store    ShopifyStore? @relation(fields: [storeId], references: [id], onDelete: SetNull)
-  triggers Trigger[]
-  emails   Email[]
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store     ShopifyStore?   @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  blueprint EmailBlueprint? @relation(fields: [blueprintId], references: [id], onDelete: SetNull)
+  triggers  Trigger[]
+  emails    Email[]
 
+  @@index([userId], name: "campaigns_user_id_idx")
+  @@index([storeId], name: "campaigns_store_id_idx")
+  @@index([blueprintId], name: "campaigns_blueprint_id_idx")
+  @@index([status], name: "campaigns_status_idx")
   @@map("campaigns")
 }
 
@@ -82,6 +90,7 @@ model Trigger {
   // Relations
   campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
+  @@index([campaignId], name: "triggers_campaign_id_idx")
   @@map("triggers")
 }
 
@@ -124,7 +133,32 @@ model Email {
   // Relations
   campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
+  @@index([campaignId], name: "emails_campaign_id_idx")
+  @@index([recipientEmail], name: "emails_recipient_email_idx")
+  @@index([status], name: "emails_status_idx")
   @@map("emails")
+}
+
+model EmailBlueprint {
+  id              String   @id @default(uuid())
+  userId          String
+  name            String
+  description     String?
+  category        String? // welcome, re-engage, upsell, etc. - matches campaign goals
+  subjectPattern  String // Template for subject line with {{variables}}
+  structure       String // JSON string defining email sections/structure
+  variables       String // JSON array of required variables
+  optionalVars    String? // JSON array of optional variables
+  example         String? // Example output for reference
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaigns Campaign[]
+
+  @@index([userId], name: "email_blueprints_user_id_idx")
+  @@map("email_blueprints")
 }
 
 model PasswordResetAudit {
@@ -139,6 +173,7 @@ model PasswordResetAudit {
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@map("password_reset_audit")
+  @@index([userId], name: "password_reset_audit_user_id_idx")
   @@index([email], name: "password_reset_audit_email_idx")
   @@index([createdAt], name: "password_reset_audit_created_at_idx")
 }

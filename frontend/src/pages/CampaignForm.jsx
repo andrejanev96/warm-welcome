@@ -14,11 +14,14 @@ const CampaignForm = () => {
     description: '',
     goal: 'welcome',
     storeId: '',
+    blueprintId: '',
     triggerType: 'user_signup',
     startDate: '',
     endDate: '',
   });
   const [stores, setStores] = useState([]);
+  const [blueprints, setBlueprints] = useState([]);
+  const [selectedBlueprint, setSelectedBlueprint] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState('');
@@ -53,6 +56,15 @@ const CampaignForm = () => {
     }
   }, []);
 
+  const fetchBlueprints = useCallback(async () => {
+    try {
+      const response = await api.get('/blueprints');
+      setBlueprints(response.data.data || []);
+    } catch (err) {
+      console.error('Failed to load blueprints:', err);
+    }
+  }, []);
+
   const fetchCampaign = useCallback(async () => {
     try {
       setLoadingData(true);
@@ -63,10 +75,14 @@ const CampaignForm = () => {
         description: campaign.description || '',
         goal: campaign.goal || 'welcome',
         storeId: campaign.store?.id || '',
+        blueprintId: campaign.blueprint?.id || '',
         triggerType: campaign.triggers?.[0]?.type || 'user_signup',
         startDate: campaign.startDate ? campaign.startDate.split('T')[0] : '',
         endDate: campaign.endDate ? campaign.endDate.split('T')[0] : '',
       });
+      if (campaign.blueprint) {
+        setSelectedBlueprint(campaign.blueprint);
+      }
     } catch (err) {
       setError('Failed to load campaign');
       console.error(err);
@@ -77,7 +93,8 @@ const CampaignForm = () => {
 
   useEffect(() => {
     fetchStores();
-  }, [fetchStores]);
+    fetchBlueprints();
+  }, [fetchStores, fetchBlueprints]);
 
   useEffect(() => {
     if (isEdit) {
@@ -88,7 +105,15 @@ const CampaignForm = () => {
   }, [isEdit, fetchCampaign]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    // Update selected blueprint when blueprintId changes
+    if (name === 'blueprintId') {
+      const blueprint = blueprints.find(b => b.id === value);
+      setSelectedBlueprint(blueprint || null);
+    }
+
     if (error) setError('');
   };
 
@@ -103,6 +128,7 @@ const CampaignForm = () => {
         description: formData.description.trim() || null,
         goal: formData.goal,
         storeId: formData.storeId || null,
+        blueprintId: formData.blueprintId || null,
         triggerType: formData.triggerType,
         startDate: formData.startDate || null,
         endDate: formData.endDate || null,
@@ -238,6 +264,72 @@ const CampaignForm = () => {
               );
             })}
           </div>
+        </div>
+
+        {/* Blueprint Selection */}
+        <div className="glass-card">
+          <h2 className="text-2xl font-bold text-white mb-2">Email Blueprint (Optional)</h2>
+          <p className="text-sm text-white/70 mb-4">
+            Use a blueprint for consistent email structure and variables
+          </p>
+
+          <select
+            id="blueprintId"
+            name="blueprintId"
+            value={formData.blueprintId}
+            onChange={handleChange}
+            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+          >
+            <option value="">No blueprint (AI will generate freely)</option>
+            {blueprints.map((blueprint) => (
+              <option key={blueprint.id} value={blueprint.id}>
+                {blueprint.name} {blueprint.category ? `(${blueprint.category})` : ''}
+              </option>
+            ))}
+          </select>
+
+          {selectedBlueprint && (
+            <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-lg space-y-3">
+              <div>
+                <p className="text-xs text-white/60 mb-1">Subject Pattern:</p>
+                <p className="text-sm text-white/90 font-mono">{selectedBlueprint.subjectPattern}</p>
+              </div>
+              {selectedBlueprint.variables && selectedBlueprint.variables.length > 0 && (
+                <div>
+                  <p className="text-xs text-white/60 mb-2">Required Variables:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedBlueprint.variables.map((variable, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2 py-1 text-xs rounded bg-orange-500/20 border border-orange-400/30 text-orange-100 font-mono"
+                      >
+                        {variable}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {selectedBlueprint.optionalVars && selectedBlueprint.optionalVars.length > 0 && (
+                <div>
+                  <p className="text-xs text-white/60 mb-2">Optional Variables:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedBlueprint.optionalVars.map((variable, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2 py-1 text-xs rounded bg-white/10 border border-white/20 text-white/70 font-mono"
+                      >
+                        {variable}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <p className="text-xs text-white/60 mt-2">
+            Blueprints provide structure and consistency while still allowing AI personalization
+          </p>
         </div>
 
         {/* Store Selection */}

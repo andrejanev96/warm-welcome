@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import prisma from '../utils/database.js';
 import { successResponse, errorResponse, asyncHandler } from '../utils/helpers.js';
 import { sendPasswordResetEmail } from '../services/email.js';
+import { logger } from '../utils/logger.js';
 
 const getClientIp = (req) => {
   const forwarded = req.headers['x-forwarded-for'];
@@ -217,7 +218,7 @@ export const requestPasswordReset = asyncHandler(async (req, res) => {
       auditStatus = sent ? 'email_sent' : 'email_failed';
 
       if (!sent) {
-        console.info('[Auth] Password reset requested for %s. Reset URL: %s', normalizedEmail, resetLink);
+        logger.info('Password reset email failed to send for user');
       }
     } else {
       auditStatus = 'user_not_found';

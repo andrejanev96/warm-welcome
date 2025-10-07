@@ -82,6 +82,16 @@ const Layout = ({ children }) => {
                   Brand Voice
                 </Link>
                 <Link
+                  to="/blueprints"
+                  className={`text-sm font-medium transition-all ${
+                    isActive('/blueprints')
+                      ? 'text-white border-b-2 border-white pb-1'
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  Blueprints
+                </Link>
+                <Link
                   to="/integrations"
                   className={`text-sm font-medium transition-all ${
                     isActive('/integrations')

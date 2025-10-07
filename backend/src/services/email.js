@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { buildPasswordResetEmail } from '../templates/passwordReset.js';
+import { logger } from '../utils/logger.js';
 
 let cachedTransporter = null;
 
@@ -38,7 +39,7 @@ const getTransporter = () => {
   try {
     return buildTransporter();
   } catch (error) {
-    console.error('Failed to configure email transporter', error);
+    logger.error('Failed to configure email transporter', error);
     return null;
   }
 };
@@ -47,7 +48,7 @@ export const sendPasswordResetEmail = async ({ to, resetLink, expiresAt }) => {
   const transporter = getTransporter();
 
   if (!transporter) {
-    console.warn(
+    logger.warn(
       'Password reset email not sent because SMTP credentials are not configured. Set SMTP_HOST to enable email delivery.'
     );
     return false;
@@ -66,7 +67,7 @@ export const sendPasswordResetEmail = async ({ to, resetLink, expiresAt }) => {
     });
     return true;
   } catch (error) {
-    console.error('Failed to send password reset email', error);
+    logger.error('Failed to send password reset email', error);
     return false;
   }
 };

@@ -11,6 +11,8 @@ import Customers from './pages/Customers';
 import Campaigns from './pages/Campaigns';
 import CampaignForm from './pages/CampaignForm';
 import CampaignDetail from './pages/CampaignDetail';
+import Blueprints from './pages/Blueprints';
+import BlueprintForm from './pages/BlueprintForm';
 import Integrations from './pages/Integrations';
 
 function App() {
@@ -76,6 +78,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <CampaignDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/blueprints"
+            element={
+              <ProtectedRoute>
+                <Blueprints />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/blueprints/new"
+            element={
+              <ProtectedRoute>
+                <BlueprintForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/blueprints/:id/edit"
+            element={
+              <ProtectedRoute>
+                <BlueprintForm />
               </ProtectedRoute>
             }
           />

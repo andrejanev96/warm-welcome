@@ -2,6 +2,8 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import prisma from '../utils/database.js';
 import { errorResponse, successResponse, asyncHandler } from '../utils/helpers.js';
+import { encrypt, decrypt } from '../utils/encryption.js';
+import { logger } from '../utils/logger.js';
 
 const getScopes = () => {
   const rawScopes = process.env.SHOPIFY_SCOPES || '';
@@ -118,7 +120,7 @@ export const oauthCallback = asyncHandler(async (req, res) => {
 
     if (!response.ok) {
       const text = await response.text();
-      console.error('Shopify token exchange failed', text);
+      logger.error('Shopify token exchange failed', text);
       return res.status(400).json(errorResponse('Failed to exchange token with Shopify.'));
     }
 
@@ -126,18 +128,21 @@ export const oauthCallback = asyncHandler(async (req, res) => {
     const accessToken = data.access_token;
     const scope = data.scope;
 
+    // Encrypt access token before storing
+    const encryptedToken = encrypt(accessToken);
+
     await prisma.shopifyStore.upsert({
       where: { shopDomain: shop },
       update: {
         userId: decodedState.userId,
-        accessToken,
+        accessToken: encryptedToken,
         scope,
         isActive: true,
       },
       create: {
         shopDomain: shop,
         userId: decodedState.userId,
-        accessToken,
+        accessToken: encryptedToken,
         scope,
         isActive: true,
       },
@@ -154,7 +159,7 @@ export const oauthCallback = asyncHandler(async (req, res) => {
       successResponse({ shop, scope }, 'Shopify store connected successfully. You can close this window.')
     );
   } catch (error) {
-    console.error('Shopify OAuth callback error', error);
+    logger.error('Shopify OAuth callback error', error);
     return res.status(500).json(errorResponse('Unexpected error completing Shopify connection.'));
   }
 });
@@ -193,16 +198,19 @@ export const fetchCustomers = asyncHandler(async (req, res) => {
   }
 
   try {
+    // Decrypt access token for API use
+    const decryptedToken = decrypt(store.accessToken);
+
     const response = await fetch(`https://${store.shopDomain}/admin/api/2024-10/customers.json?limit=${limit}`, {
       headers: {
-        'X-Shopify-Access-Token': store.accessToken,
+        'X-Shopify-Access-Token': decryptedToken,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
       const text = await response.text();
-      console.error('Shopify API error:', text);
+      logger.error('Shopify API error:', text);
       return res.status(response.status).json(errorResponse('Failed to fetch customers from Shopify.'));
     }
 
@@ -284,7 +292,7 @@ export const fetchCustomers = asyncHandler(async (req, res) => {
 
     return res.status(200).json(successResponse(enrichedCustomers, 'Customers fetched successfully.'));
   } catch (error) {
-    console.error('Error fetching customers:', error);
+    logger.error('Error fetching customers:', error);
     return res.status(500).json(errorResponse('Unexpected error fetching customers.'));
   }
 });
