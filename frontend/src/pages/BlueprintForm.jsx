@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../components/Layout";
 import Alert from "../components/Alert";
 import api from "../utils/api";
+import { SHOPIFY_VARIABLE_GROUPS, EXAMPLE_CUSTOMER_TOKEN } from "../utils/shopifyVariables";
 
 const BlueprintForm = () => {
   const { id } = useParams();
@@ -25,6 +26,7 @@ const BlueprintForm = () => {
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [copiedToken, setCopiedToken] = useState("");
 
   const categories = [
     { value: "welcome", label: "Welcome New Customers", icon: "👋" },
@@ -68,6 +70,15 @@ const BlueprintForm = () => {
       setLoadingData(false);
     }
   }, [isEdit, fetchBlueprint]);
+
+  useEffect(() => {
+    if (!copiedToken) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => setCopiedToken(""), 2000);
+    return () => window.clearTimeout(timer);
+  }, [copiedToken]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -148,6 +159,23 @@ const BlueprintForm = () => {
     }
   };
 
+  const handleCopyVariable = async (token) => {
+    const formatted = `{${token}}`;
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(formatted);
+        setCopiedToken(token);
+        return;
+      }
+    } catch (err) {
+      console.warn("Clipboard copy failed", err);
+    }
+
+    window.prompt("Copy this variable", formatted);
+    setCopiedToken(token);
+  };
+
   if (loadingData) {
     return (
       <Layout>
@@ -183,247 +211,303 @@ const BlueprintForm = () => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Info */}
-        <div className="glass-card">
-          <h2 className="text-2xl font-bold text-white mb-6">Basic Information</h2>
+      <div className="lg:flex lg:items-start lg:gap-6">
+        <form onSubmit={handleSubmit} className="space-y-6 lg:flex-1">
+          {/* Basic Info */}
+          <div className="glass-card">
+            <h2 className="text-2xl font-bold text-white mb-6">Basic Information</h2>
 
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-white/90 mb-2">
-                Blueprint Name *
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                placeholder="e.g., Welcome Series Template"
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-white/90 mb-2">
-                Description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows={2}
-                placeholder="Brief description of this blueprint..."
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="category" className="block text-sm font-medium text-white/90 mb-2">
-                Category
-              </label>
-              <select
-                id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
-              >
-                {categories.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.icon} {cat.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Subject Pattern */}
-        <div className="glass-card">
-          <h2 className="text-2xl font-bold text-white mb-2">Subject Pattern *</h2>
-          <p className="text-sm text-white/70 mb-4">
-            Use variables in curly braces, e.g., Welcome {"{"}customerName{"}"} to {"{"}storeName
-            {"}"}
-          </p>
-
-          <input
-            type="text"
-            id="subjectPattern"
-            name="subjectPattern"
-            value={formData.subjectPattern}
-            onChange={handleChange}
-            required
-            placeholder="e.g., Welcome {customerName} to {storeName}"
-            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent font-mono"
-          />
-        </div>
-
-        {/* Variables */}
-        <div className="glass-card">
-          <h2 className="text-2xl font-bold text-white mb-2">Required Variables *</h2>
-          <p className="text-sm text-white/70 mb-4">
-            Variables that must be provided when using this blueprint
-          </p>
-
-          <div className="space-y-3">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newVariable}
-                onChange={(e) => setNewVariable(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddVariable();
-                  }
-                }}
-                placeholder="e.g., customerName"
-                className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent font-mono"
-              />
-              <button type="button" onClick={handleAddVariable} className="glass-button">
-                Add
-              </button>
-            </div>
-
-            {formData.variables.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {formData.variables.map((variable) => (
-                  <span
-                    key={`required-${variable}`}
-                    className="inline-flex items-center gap-2 px-3 py-2 rounded bg-orange-500/20 border border-orange-400/30 text-orange-100 font-mono"
-                  >
-                    {variable}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveVariable(variable)}
-                      className="text-orange-100 hover:text-white"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-white/90 mb-2">
+                  Blueprint Name *
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  placeholder="e.g., Welcome Series Template"
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                />
               </div>
-            )}
-          </div>
-        </div>
 
-        {/* Optional Variables */}
-        <div className="glass-card">
-          <h2 className="text-2xl font-bold text-white mb-2">Optional Variables</h2>
-          <p className="text-sm text-white/70 mb-4">
-            Variables that can be provided but are not required
-          </p>
-
-          <div className="space-y-3">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newOptionalVar}
-                onChange={(e) => setNewOptionalVar(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddOptionalVar();
-                  }
-                }}
-                placeholder="e.g., discountCode"
-                className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent font-mono"
-              />
-              <button type="button" onClick={handleAddOptionalVar} className="glass-button">
-                Add
-              </button>
-            </div>
-
-            {formData.optionalVars.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {formData.optionalVars.map((variable) => (
-                  <span
-                    key={`optional-${variable}`}
-                    className="inline-flex items-center gap-2 px-3 py-2 rounded bg-white/10 border border-white/20 text-white/90 font-mono"
-                  >
-                    {variable}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveOptionalVar(variable)}
-                      className="text-white/70 hover:text-white"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
+              <div>
+                <label
+                  htmlFor="description"
+                  className="block text-sm font-medium text-white/90 mb-2"
+                >
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  rows={2}
+                  placeholder="Brief description of this blueprint..."
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                />
               </div>
-            )}
+
+              <div>
+                <label htmlFor="category" className="block text-sm font-medium text-white/90 mb-2">
+                  Category
+                </label>
+                <select
+                  id="category"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                >
+                  {categories.map((cat) => (
+                    <option key={cat.value} value={cat.value}>
+                      {cat.icon} {cat.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Structure */}
-        <div className="glass-card">
-          <h2 className="text-2xl font-bold text-white mb-2">Email Structure (JSON) *</h2>
-          <p className="text-sm text-white/70 mb-4">
-            Define the email structure as JSON. Use variables in format {"{"}variableName{"}"}
-          </p>
+          {/* Subject Pattern */}
+          <div className="glass-card">
+            <h2 className="text-2xl font-bold text-white mb-2">Subject Pattern *</h2>
+            <p className="text-sm text-white/70 mb-4">
+              Use variables in curly braces, e.g., Welcome {"{"}customerName{"}"} to {"{"}storeName
+              {"}"}
+            </p>
 
-          <textarea
-            id="structure"
-            name="structure"
-            value={formData.structure}
-            onChange={handleChange}
-            required
-            rows={10}
-            placeholder={`{
+            <input
+              type="text"
+              id="subjectPattern"
+              name="subjectPattern"
+              value={formData.subjectPattern}
+              onChange={handleChange}
+              required
+              placeholder="e.g., Welcome {customerName} to {storeName}"
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent font-mono"
+            />
+          </div>
+
+          {/* Variables */}
+          <div className="glass-card">
+            <h2 className="text-2xl font-bold text-white mb-2">Required Variables *</h2>
+            <p className="text-sm text-white/70 mb-4">
+              Variables that must be provided when using this blueprint
+            </p>
+
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newVariable}
+                  onChange={(e) => setNewVariable(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddVariable();
+                    }
+                  }}
+                  placeholder="e.g., customerName"
+                  className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent font-mono"
+                />
+                <button type="button" onClick={handleAddVariable} className="glass-button">
+                  Add
+                </button>
+              </div>
+
+              {formData.variables.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {formData.variables.map((variable) => (
+                    <span
+                      key={`required-${variable}`}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded bg-orange-500/20 border border-orange-400/30 text-orange-100 font-mono"
+                    >
+                      {variable}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveVariable(variable)}
+                        className="text-orange-100 hover:text-white"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Optional Variables */}
+          <div className="glass-card">
+            <h2 className="text-2xl font-bold text-white mb-2">Optional Variables</h2>
+            <p className="text-sm text-white/70 mb-4">
+              Variables that can be provided but are not required
+            </p>
+
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newOptionalVar}
+                  onChange={(e) => setNewOptionalVar(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddOptionalVar();
+                    }
+                  }}
+                  placeholder="e.g., discountCode"
+                  className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent font-mono"
+                />
+                <button type="button" onClick={handleAddOptionalVar} className="glass-button">
+                  Add
+                </button>
+              </div>
+
+              {formData.optionalVars.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {formData.optionalVars.map((variable) => (
+                    <span
+                      key={`optional-${variable}`}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded bg-white/10 border border-white/20 text-white/90 font-mono"
+                    >
+                      {variable}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveOptionalVar(variable)}
+                        className="text-white/70 hover:text-white"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Structure */}
+          <div className="glass-card">
+            <h2 className="text-2xl font-bold text-white mb-2">Email Structure (JSON) *</h2>
+            <p className="text-sm text-white/70 mb-4">
+              Define the email structure as JSON. Use variables in format {"{"}variableName{"}"}
+            </p>
+
+            <textarea
+              id="structure"
+              name="structure"
+              value={formData.structure}
+              onChange={handleChange}
+              required
+              rows={10}
+              placeholder={`{
   "greeting": "Hi {customerName},",
   "body": "Welcome to {storeName}!",
   "closing": "Best regards,\\nThe Team"
 }`}
-            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent font-mono text-sm"
-          />
-        </div>
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent font-mono text-sm"
+            />
+          </div>
 
-        {/* Example */}
-        <div className="glass-card">
-          <h2 className="text-2xl font-bold text-white mb-2">Example Output</h2>
-          <p className="text-sm text-white/70 mb-4">
-            Optional example showing how this blueprint might look with real data
-          </p>
+          {/* Example */}
+          <div className="glass-card">
+            <h2 className="text-2xl font-bold text-white mb-2">Example Output</h2>
+            <p className="text-sm text-white/70 mb-4">
+              Optional example showing how this blueprint might look with real data
+            </p>
 
-          <textarea
-            id="example"
-            name="example"
-            value={formData.example}
-            onChange={handleChange}
-            rows={5}
-            placeholder="Example email content with variables filled in..."
-            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
-          />
-        </div>
+            <textarea
+              id="example"
+              name="example"
+              value={formData.example}
+              onChange={handleChange}
+              rows={5}
+              placeholder="Example email content with variables filled in..."
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+            />
+          </div>
 
-        {/* Actions */}
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={
-              loading ||
-              !formData.name.trim() ||
-              !formData.subjectPattern.trim() ||
-              !formData.structure.trim() ||
-              formData.variables.length === 0
-            }
-            className="glass-button flex-1 justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Saving..." : isEdit ? "Update Blueprint" : "Create Blueprint"}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate("/blueprints")}
-            className="glass-button justify-center"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+          {/* Actions */}
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              disabled={
+                loading ||
+                !formData.name.trim() ||
+                !formData.subjectPattern.trim() ||
+                !formData.structure.trim() ||
+                formData.variables.length === 0
+              }
+              className="glass-button flex-1 justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "Saving..." : isEdit ? "Update Blueprint" : "Create Blueprint"}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/blueprints")}
+              className="glass-button justify-center"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+
+        <aside className="mt-8 lg:mt-0 lg:w-80 lg:flex-none lg:sticky lg:top-24 space-y-4">
+          <div className="glass-card">
+            <h2 className="text-xl font-semibold text-white mb-2">Shopify variables</h2>
+            <p className="text-sm text-white/70">
+              Insert these tokens into your subject or structure using curly braces, e.g.
+              <code className="ml-1 bg-white/10 px-1.5 py-0.5 rounded border border-white/20 text-orange-100">
+                {EXAMPLE_CUSTOMER_TOKEN}
+              </code>
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {SHOPIFY_VARIABLE_GROUPS.map((group) => (
+              <div key={group.title} className="glass-card space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{group.icon}</span>
+                  <h3 className="text-sm font-semibold text-white">{group.title}</h3>
+                </div>
+                <ul className="space-y-3">
+                  {group.variables.map((variable) => (
+                    <li key={variable.token} className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <code className="inline-block bg-orange-500/10 border border-orange-400/30 text-orange-100 font-mono text-xs px-2 py-1 rounded">
+                          {`{${variable.token}}`}
+                        </code>
+                        <p className="text-xs text-white/60 mt-1 leading-snug">
+                          {variable.description}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyVariable(variable.token)}
+                        className={`glass-button h-7 w-7 p-0 flex items-center justify-center ${
+                          copiedToken === variable.token
+                            ? "bg-emerald-500/30 border-emerald-400/40"
+                            : ""
+                        }`}
+                        aria-label={`Copy ${variable.token}`}
+                      >
+                        <span aria-hidden="true" className="text-sm">
+                          {copiedToken === variable.token ? "✓" : "📋"}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </aside>
+      </div>
     </Layout>
   );
 };

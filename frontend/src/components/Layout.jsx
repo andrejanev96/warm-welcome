@@ -161,8 +161,8 @@ const Layout = ({ children }) => {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              {/* Onboarding notification - only show if not complete */}
-              {onboardingProgress && !onboardingProgress.isComplete && (
+              {/* Onboarding & news notifications */}
+              {onboardingProgress && (
                 <div className="relative" ref={dropdownRef}>
                   <button
                     type="button"
