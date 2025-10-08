@@ -4,11 +4,13 @@ import Layout from "../components/Layout";
 import Alert from "../components/Alert";
 import api from "../utils/api";
 import { SHOPIFY_VARIABLE_GROUPS, EXAMPLE_CUSTOMER_TOKEN } from "../utils/shopifyVariables";
+import { useOnboardingProgress } from "../context/OnboardingContext.jsx";
 
 const BlueprintForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
+  const { refresh } = useOnboardingProgress();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -147,6 +149,8 @@ const BlueprintForm = () => {
         await api.post("/blueprints", payload);
         setSuccess("Blueprint created successfully!");
       }
+
+      refresh();
 
       setTimeout(() => navigate("/blueprints"), 1500);
     } catch (err) {

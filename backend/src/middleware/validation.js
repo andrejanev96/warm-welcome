@@ -84,7 +84,9 @@ export const campaignSchemas = {
       .optional()
       .valid("welcome", "re-engage", "upsell", "milestone", "nurture", "feedback"),
     storeId: Joi.string().optional().allow(null),
-    blueprintId: Joi.string().optional().allow(null),
+    blueprintId: Joi.string().required().messages({
+      "any.required": "Blueprint is required to generate emails",
+    }),
     triggerType: Joi.string()
       .optional()
       .valid(
@@ -109,7 +111,7 @@ export const campaignSchemas = {
       .optional()
       .valid("welcome", "re-engage", "upsell", "milestone", "nurture", "feedback"),
     storeId: Joi.string().optional().allow(null),
-    blueprintId: Joi.string().optional().allow(null),
+    blueprintId: Joi.string().optional(),
     startDate: Joi.date().optional().allow(null),
     endDate: Joi.date().optional().allow(null),
     triggerType: Joi.string()
@@ -175,4 +177,32 @@ export const blueprintSchemas = {
     .messages({
       "object.min": "Provide at least one field to update",
     }),
+};
+
+export const emailSchemas = {
+  preview: Joi.object({
+    campaignId: Joi.string().required().messages({
+      "any.required": "campaignId is required",
+    }),
+    customer: Joi.object({
+      firstName: Joi.string().optional(),
+      lastName: Joi.string().optional(),
+      email: Joi.string().email().optional(),
+    }).optional(),
+  }),
+
+  sendTest: Joi.object({
+    campaignId: Joi.string().required().messages({
+      "any.required": "campaignId is required",
+    }),
+    to: Joi.string().email().required().messages({
+      "string.email": "Provide a valid recipient email",
+      "any.required": "Recipient email is required",
+    }),
+    customer: Joi.object({
+      firstName: Joi.string().optional(),
+      lastName: Joi.string().optional(),
+      email: Joi.string().email().optional(),
+    }).optional(),
+  }),
 };

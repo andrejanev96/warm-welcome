@@ -144,6 +144,10 @@ export const createCampaign = asyncHandler(async (req, res) => {
     return res.status(400).json(errorResponse("Campaign name is required"));
   }
 
+  if (!blueprintId) {
+    return res.status(400).json(errorResponse("Blueprint is required to create a campaign"));
+  }
+
   // Validate store if provided
   if (storeId) {
     const store = await prisma.shopifyStore.findFirst({
@@ -160,17 +164,15 @@ export const createCampaign = asyncHandler(async (req, res) => {
   }
 
   // Validate blueprint if provided
-  if (blueprintId) {
-    const blueprint = await prisma.emailBlueprint.findFirst({
-      where: {
-        id: blueprintId,
-        userId: req.user.id,
-      },
-    });
+  const blueprint = await prisma.emailBlueprint.findFirst({
+    where: {
+      id: blueprintId,
+      userId: req.user.id,
+    },
+  });
 
-    if (!blueprint) {
-      return res.status(404).json(errorResponse("Blueprint not found"));
-    }
+  if (!blueprint) {
+    return res.status(404).json(errorResponse("Blueprint not found"));
   }
 
   let campaign;
@@ -184,7 +186,7 @@ export const createCampaign = asyncHandler(async (req, res) => {
         status: "draft",
         userId: req.user.id,
         storeId: storeId || null,
-        blueprintId: blueprintId || null,
+        blueprintId,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
         triggers: triggerType
@@ -300,19 +302,22 @@ export const updateCampaign = asyncHandler(async (req, res) => {
   }
 
   if (blueprintId !== undefined) {
-    if (blueprintId) {
-      const blueprint = await prisma.emailBlueprint.findFirst({
-        where: {
-          id: blueprintId,
-          userId: req.user.id,
-        },
-      });
-
-      if (!blueprint) {
-        return res.status(404).json(errorResponse("Blueprint not found"));
-      }
+    if (!blueprintId) {
+      return res.status(400).json(errorResponse("Blueprint is required to generate emails"));
     }
-    data.blueprintId = blueprintId || null;
+
+    const blueprint = await prisma.emailBlueprint.findFirst({
+      where: {
+        id: blueprintId,
+        userId: req.user.id,
+      },
+    });
+
+    if (!blueprint) {
+      return res.status(404).json(errorResponse("Blueprint not found"));
+    }
+
+    data.blueprintId = blueprintId;
   }
 
   let updatedCampaign = await prisma.campaign.update({

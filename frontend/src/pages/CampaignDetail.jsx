@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import Layout from "../components/Layout";
 import Alert from "../components/Alert";
-import api from "../utils/api";
+import api, { emailAPI } from "../utils/api";
 
 const CampaignDetail = () => {
   const { id } = useParams();
@@ -10,6 +10,16 @@ const CampaignDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [previewError, setPreviewError] = useState("");
+  const [preview, setPreview] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [sendLoading, setSendLoading] = useState(false);
+  const [customerInput, setCustomerInput] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+  });
+  const [testRecipient, setTestRecipient] = useState("");
 
   const goals = {
     welcome: {
@@ -97,6 +107,51 @@ const CampaignDetail = () => {
       setError(err.response?.data?.message || "Failed to update campaign status");
     } finally {
       setStatusLoading(false);
+    }
+  };
+
+  const sanitizedCustomer = () => {
+    const entries = Object.entries(customerInput)
+      .map(([key, value]) => [key, typeof value === "string" ? value.trim() : value])
+      .filter(([, value]) => Boolean(value));
+    return entries.length ? Object.fromEntries(entries) : undefined;
+  };
+
+  const handlePreview = async () => {
+    setPreviewLoading(true);
+    setPreviewError("");
+    setPreview(null);
+
+    try {
+      const response = await emailAPI.preview({ campaignId: id, customer: sanitizedCustomer() });
+      setPreview(response.data.data);
+    } catch (err) {
+      setPreviewError(err.response?.data?.message || "Failed to generate preview");
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const handleSendTest = async () => {
+    if (!testRecipient.trim()) {
+      setPreviewError("Add a recipient email before sending a test message.");
+      return;
+    }
+
+    setSendLoading(true);
+    setPreviewError("");
+
+    try {
+      await emailAPI.sendTest({
+        campaignId: id,
+        to: testRecipient.trim(),
+        customer: sanitizedCustomer(),
+      });
+      setSuccess("Test email sent. Check your inbox!");
+    } catch (err) {
+      setPreviewError(err.response?.data?.message || "Failed to send test email");
+    } finally {
+      setSendLoading(false);
     }
   };
 
@@ -321,6 +376,94 @@ const CampaignDetail = () => {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          <div className="glass-card">
+            <h3 className="text-xl font-bold text-white mb-4">🔍 Preview & Test Email</h3>
+            <p className="text-sm text-white/70 mb-4">
+              Generate an AI draft for a sample customer and send yourself a preview email.
+            </p>
+
+            {previewError && (
+              <div className="glass-alert border border-red-500/40 text-red-100 bg-red-500/10 mb-4">
+                {previewError}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-semibold text-white/80 mb-2">Sample customer</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    value={customerInput.firstName}
+                    onChange={(e) => setCustomerInput({ ...customerInput, firstName: e.target.value })}
+                    placeholder="First name"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                  />
+                  <input
+                    type="text"
+                    value={customerInput.lastName}
+                    onChange={(e) => setCustomerInput({ ...customerInput, lastName: e.target.value })}
+                    placeholder="Last name"
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                  />
+                  <input
+                    type="email"
+                    value={customerInput.email}
+                    onChange={(e) => setCustomerInput({ ...customerInput, email: e.target.value })}
+                    placeholder="Customer email (optional)"
+                    className="sm:col-span-2 w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={handlePreview}
+                    className="glass-button"
+                    disabled={previewLoading}
+                  >
+                    {previewLoading ? "Generating..." : "Generate preview"}
+                  </button>
+                  <input
+                    type="email"
+                    value={testRecipient}
+                    onChange={(e) => setTestRecipient(e.target.value)}
+                    placeholder="Send test to"
+                    className="flex-1 min-w-[200px] px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSendTest}
+                    className="glass-button"
+                    disabled={sendLoading || !testRecipient}
+                  >
+                    {sendLoading ? "Sending..." : "Send test"}
+                  </button>
+                </div>
+                <p className="text-xs text-white/50">
+                  Tests use your current brand voice, blueprint, and campaign goal. Update those settings for different variations.
+                </p>
+              </div>
+
+              {preview && (
+                <div className="bg-white/5 border border-white/15 rounded-xl p-4 space-y-4">
+                  <div>
+                    <p className="text-xs font-medium text-white/60 uppercase">Subject</p>
+                    <p className="text-white text-lg font-semibold mt-1">{preview.subject}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-white/60 uppercase mb-2">Email body</p>
+                    <div className="bg-black/20 border border-white/10 rounded-lg p-4 text-sm text-white/90 whitespace-pre-wrap leading-relaxed">
+                      {preview.text || preview.html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Status Management */}
           <div className="glass-card">
             <h3 className="text-xl font-bold text-white mb-4">Campaign Status</h3>

@@ -1,25 +1,8 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import api from "../utils/api";
+import { useOnboardingProgress } from "../context/OnboardingContext.jsx";
 
 const OnboardingChecklist = ({ variant = "card" }) => {
-  const [progress, setProgress] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchProgress = async () => {
-      try {
-        const response = await api.get("/onboarding/progress");
-        setProgress(response.data.data);
-      } catch (error) {
-        console.error("Failed to load onboarding progress", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProgress();
-  }, []);
+  const { progress, loading, error } = useOnboardingProgress();
 
   if (loading) {
     return (
@@ -30,10 +13,25 @@ const OnboardingChecklist = ({ variant = "card" }) => {
   }
 
   if (!progress) {
+    if (variant === "dropdown") {
+      return (
+        <div className="w-64 px-4 py-3 text-sm text-white/70">
+          {error || "No onboarding steps available right now."}
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="glass-card border border-yellow-400/40 text-yellow-100 bg-yellow-500/20 p-4">
+          {error}
+        </div>
+      );
+    }
+
     return null;
   }
 
-  // If dropdown variant, show compact view
   if (variant === "dropdown") {
     return (
       <div className="w-80">
@@ -50,6 +48,14 @@ const OnboardingChecklist = ({ variant = "card" }) => {
               style={{ width: `${progress.progress}%` }}
             />
           </div>
+        </div>
+        <div className="px-4 py-3 border-b border-white/10">
+          <Link
+            to="/onboarding"
+            className="text-xs font-medium text-white/80 hover:text-white transition-colors"
+          >
+            Open guided onboarding →
+          </Link>
         </div>
         <div className="max-h-96 overflow-y-auto">
           {progress.steps.map((step, index) => (
@@ -93,7 +99,6 @@ const OnboardingChecklist = ({ variant = "card" }) => {
     );
   }
 
-  // Card variant for Dashboard
   return (
     <div className="glass-card">
       <div className="flex items-center justify-between mb-6">
@@ -106,6 +111,12 @@ const OnboardingChecklist = ({ variant = "card" }) => {
             <span className="text-sm font-bold text-white">{progress.progress}%</span>
           </div>
         </div>
+      </div>
+
+      <div className="mb-6 flex justify-end">
+        <Link to="/onboarding" className="glass-button px-4 py-2 text-sm">
+          Launch guided setup
+        </Link>
       </div>
 
       <div className="h-3 bg-white/10 rounded-full overflow-hidden mb-6">

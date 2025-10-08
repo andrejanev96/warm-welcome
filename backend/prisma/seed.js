@@ -15,6 +15,12 @@ async function createDemoUser() {
     return existing;
   }
 
+  if (!process.env.SEED_USER_PASSWORD) {
+    console.warn(
+      "⚠️  SEED_USER_PASSWORD is not set. Using the default password is unsafe outside local development.",
+    );
+  }
+
   const hashed = await bcrypt.hash(password, 12);
   const user = await prisma.user.create({
     data: {
@@ -25,7 +31,9 @@ async function createDemoUser() {
     },
   });
 
-  console.log(`✅ Created demo user (${email}) with password ${password}`);
+  console.log(
+    `✅ Created demo user (${email}). Configure SEED_USER_PASSWORD before seeding in shared environments.`,
+  );
   return user;
 }
 

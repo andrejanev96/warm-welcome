@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Layout from "../components/Layout";
 import Alert from "../components/Alert";
 import api from "../utils/api";
+import { useOnboardingProgress } from "../context/OnboardingContext.jsx";
 
 const generateId = () => Math.random().toString(36).slice(2, 10);
 const createEntry = (value = "") => ({ id: generateId(), value });
@@ -13,6 +14,7 @@ const BrandVoice = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const { refresh } = useOnboardingProgress();
 
   const [formData, setFormData] = useState({
     businessName: "",
@@ -140,6 +142,7 @@ const BrandVoice = () => {
       };
 
       await api.put("/brand-voice", payload);
+      refresh();
       setSuccess("Brand voice saved successfully!");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to save brand voice");

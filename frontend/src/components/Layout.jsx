@@ -1,20 +1,20 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useOnboardingProgress } from "../context/OnboardingContext.jsx";
 import CelebrationOverlay from "./animations/CelebrationOverlay.jsx";
 import EnvelopeAnimation from "./animations/EnvelopeAnimation.jsx";
 import OnboardingChecklist from "./OnboardingChecklist";
-import api from "../utils/api";
 
-const Layout = ({ children }) => {
+const LayoutContent = ({ children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [showLogoutAnimation, setShowLogoutAnimation] = useState(false);
-  const [onboardingProgress, setOnboardingProgress] = useState(null);
   const [showOnboardingDropdown, setShowOnboardingDropdown] = useState(false);
   const logoutTimeoutRef = useRef(null);
   const dropdownRef = useRef(null);
+  const { progress: onboardingProgress, loading: onboardingLoading } = useOnboardingProgress();
 
   useEffect(() => {
     return () => {
@@ -24,21 +24,6 @@ const Layout = ({ children }) => {
     };
   }, []);
 
-  // Fetch onboarding progress
-  useEffect(() => {
-    const fetchOnboardingProgress = async () => {
-      try {
-        const response = await api.get("/onboarding/progress");
-        setOnboardingProgress(response.data.data);
-      } catch (error) {
-        console.error("Failed to load onboarding progress", error);
-      }
-    };
-
-    fetchOnboardingProgress();
-  }, []);
-
-  // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -74,14 +59,12 @@ const Layout = ({ children }) => {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Animated background blobs */}
       <div className="absolute inset-0 -z-10">
         <div className="blob blob-1" />
         <div className="blob blob-2" />
         <div className="blob blob-3" />
       </div>
 
-      {/* Navigation */}
       <nav className="glass-nav sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
@@ -161,8 +144,7 @@ const Layout = ({ children }) => {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              {/* Onboarding & news notifications */}
-              {onboardingProgress && (
+              {!onboardingLoading && onboardingProgress && (
                 <div className="relative" ref={dropdownRef}>
                   <button
                     type="button"
@@ -192,7 +174,6 @@ const Layout = ({ children }) => {
                     )}
                   </button>
 
-                  {/* Dropdown */}
                   {showOnboardingDropdown && (
                     <div className="absolute right-0 mt-2 bg-gray-900/95 backdrop-blur-xl shadow-2xl border border-white/20 rounded-2xl overflow-hidden">
                       <OnboardingChecklist variant="dropdown" />
@@ -222,12 +203,15 @@ const Layout = ({ children }) => {
         </div>
       </nav>
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">{children}</div>
 
       <CelebrationOverlay show={showLogoutAnimation} variant="logout" />
     </div>
   );
+};
+
+const Layout = ({ children }) => {
+  return <LayoutContent>{children}</LayoutContent>;
 };
 
 export default Layout;

@@ -5,6 +5,7 @@ import blueprintRoutes from "./blueprints.js";
 import campaignRoutes from "./campaigns.js";
 import shopifyRoutes from "./shopify.js";
 import onboardingRoutes from "./onboarding.js";
+import emailRoutes from "./emails.js";
 
 const router = express.Router();
 
@@ -24,6 +25,7 @@ router.use("/blueprints", blueprintRoutes);
 router.use("/campaigns", campaignRoutes);
 router.use("/shopify", shopifyRoutes);
 router.use("/onboarding", onboardingRoutes);
+router.use("/emails", emailRoutes);
 
 // 404 handler for undefined routes
 router.use("*", (req, res) => {

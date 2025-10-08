@@ -1,15 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Layout from "../components/Layout";
 import Alert from "../components/Alert";
 import CelebrationOverlay from "../components/animations/CelebrationOverlay.jsx";
 import EnvelopeAnimation from "../components/animations/EnvelopeAnimation.jsx";
 import api from "../utils/api";
+import { useOnboardingProgress } from "../context/OnboardingContext.jsx";
 
 const CampaignForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
+  const { refresh } = useOnboardingProgress();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -40,7 +42,9 @@ const CampaignForm = () => {
     };
   }, []);
 
-  const isFormValid = Boolean(formData.name.trim() && formData.goal && formData.triggerType);
+  const isFormValid = Boolean(
+    formData.name.trim() && formData.goal && formData.triggerType && formData.blueprintId,
+  );
 
   const goals = [
     {
@@ -83,40 +87,22 @@ const CampaignForm = () => {
 
   const triggerTypes = [
     {
-      value: "user_signup",
-      label: "User Signup",
-      icon: "👋",
-      description: "When a new user creates an account",
+      value: "immediate",
+      label: "Send instantly",
+      icon: "⚡",
+      description: "Fire this campaign as soon as it’s activated",
     },
     {
-      value: "first_purchase",
-      label: "First Purchase",
-      icon: "🛍️",
-      description: "After customer's first purchase",
+      value: "scheduled",
+      label: "Schedule",
+      icon: "🗓️",
+      description: "Send on a specific date or cadence",
     },
     {
-      value: "abandoned_cart",
-      label: "Abandoned Cart",
-      icon: "🛒",
-      description: "When cart is abandoned for 24h",
-    },
-    {
-      value: "post_purchase",
-      label: "Post Purchase",
-      icon: "📦",
-      description: "After a purchase is completed",
-    },
-    {
-      value: "no_activity",
-      label: "No Activity",
-      icon: "💤",
-      description: "After 30 days of inactivity",
-    },
-    {
-      value: "high_value",
-      label: "High Value Reached",
-      icon: "⭐",
-      description: "When customer reaches spending threshold",
+      value: "manual",
+      label: "Manual",
+      icon: "🛠️",
+      description: "Trigger via API or future automation",
     },
   ];
 
@@ -137,6 +123,21 @@ const CampaignForm = () => {
       console.error("Failed to load blueprints:", err);
     }
   }, []);
+
+  useEffect(() => {
+    if (!formData.blueprintId && blueprints.length > 0) {
+      const defaultBlueprint = blueprints[0];
+      setFormData((prev) => ({ ...prev, blueprintId: defaultBlueprint.id }));
+      setSelectedBlueprint(defaultBlueprint);
+    }
+  }, [blueprints, formData.blueprintId]);
+
+  useEffect(() => {
+    if (blueprints.length === 0 && formData.blueprintId) {
+      setFormData((prev) => ({ ...prev, blueprintId: "" }));
+      setSelectedBlueprint(null);
+    }
+  }, [blueprints.length, formData.blueprintId]);
 
   const fetchCampaign = useCallback(async () => {
     try {
@@ -211,11 +212,17 @@ const CampaignForm = () => {
         description: formData.description.trim() || null,
         goal: formData.goal,
         storeId: formData.storeId || null,
-        blueprintId: formData.blueprintId || null,
+        blueprintId: formData.blueprintId,
         triggerType: formData.triggerType,
         startDate: formData.startDate || null,
         endDate: formData.endDate || null,
       };
+
+      if (!payload.blueprintId) {
+        setError("Select a blueprint before saving your campaign.");
+        setLoading(false);
+        return;
+      }
 
       if (isEdit) {
         await api.put(`/campaigns/${id}`, payload);
@@ -232,6 +239,8 @@ const CampaignForm = () => {
           message: "Launching those warm welcomes now.",
         });
       }
+
+      refresh();
 
       if (celebrationTimeoutRef.current) {
         clearTimeout(celebrationTimeoutRef.current);
@@ -365,69 +374,88 @@ const CampaignForm = () => {
 
         {/* Blueprint Selection */}
         <div className="glass-card">
-          <h2 className="text-2xl font-bold text-white mb-2">Email Blueprint (Optional)</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">Email Blueprint</h2>
           <p className="text-sm text-white/70 mb-4">
-            Use a blueprint for consistent email structure and variables
+            Blueprints teach WarmWelcome how to structure every email this campaign sends.
           </p>
 
-          <select
-            id="blueprintId"
-            name="blueprintId"
-            value={formData.blueprintId}
-            onChange={handleChange}
-            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
-          >
-            <option value="">No blueprint (AI will generate freely)</option>
-            {blueprints.map((blueprint) => (
-              <option key={blueprint.id} value={blueprint.id}>
-                {blueprint.name} {blueprint.category ? `(${blueprint.category})` : ""}
-              </option>
-            ))}
-          </select>
-
-          {selectedBlueprint && (
-            <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-lg space-y-3">
-              <div>
-                <p className="text-xs text-white/60 mb-1">Subject Pattern:</p>
-                <p className="text-sm text-white/90 font-mono">
-                  {selectedBlueprint.subjectPattern}
-                </p>
-              </div>
-              {selectedBlueprint.variables && selectedBlueprint.variables.length > 0 && (
-                <div>
-                  <p className="text-xs text-white/60 mb-2">Required Variables:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedBlueprint.variables.map((variable) => (
-                      <span
-                        key={`required-${variable}`}
-                        className="px-2 py-1 text-xs rounded bg-orange-500/20 border border-orange-400/30 text-orange-100 font-mono"
-                      >
-                        {variable}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {selectedBlueprint.optionalVars && selectedBlueprint.optionalVars.length > 0 && (
-                <div>
-                  <p className="text-xs text-white/60 mb-2">Optional Variables:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedBlueprint.optionalVars.map((variable) => (
-                      <span
-                        key={`optional-${variable}`}
-                        className="px-2 py-1 text-xs rounded bg-white/10 border border-white/20 text-white/70 font-mono"
-                      >
-                        {variable}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
+          {blueprints.length === 0 ? (
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-sm text-white/80 space-y-3">
+              <p>You need a blueprint before launching AI-generated emails.</p>
+              <Link to="/blueprints/new" className="glass-button inline-flex w-auto">
+                + Create your first blueprint
+              </Link>
             </div>
+          ) : (
+            <>
+              <select
+                id="blueprintId"
+                name="blueprintId"
+                required
+                value={formData.blueprintId}
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
+              >
+                {blueprints.map((blueprint) => (
+                  <option key={blueprint.id} value={blueprint.id}>
+                    {blueprint.name} {blueprint.category ? `(${blueprint.category})` : ""}
+                  </option>
+                ))}
+              </select>
+
+              {selectedBlueprint && (
+                <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-lg space-y-3">
+                  <div>
+                    <p className="text-xs text-white/60 mb-1">Subject Pattern:</p>
+                    <p className="text-sm text-white/90 font-mono">
+                      {selectedBlueprint.subjectPattern}
+                    </p>
+                  </div>
+                  {selectedBlueprint.variables && selectedBlueprint.variables.length > 0 && (
+                    <div>
+                      <p className="text-xs text-white/60 mb-2">Required Variables:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedBlueprint.variables.map((variable) => (
+                          <span
+                            key={`required-${variable}`}
+                            className="px-2 py-1 text-xs rounded bg-orange-500/20 border border-orange-400/30 text-orange-100 font-mono"
+                          >
+                            {variable}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {selectedBlueprint.optionalVars && selectedBlueprint.optionalVars.length > 0 && (
+                    <div>
+                      <p className="text-xs text-white/60 mb-2">Optional Variables:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedBlueprint.optionalVars.map((variable) => (
+                          <span
+                            key={`optional-${variable}`}
+                            className="px-2 py-1 text-xs rounded bg-white/10 border border-white/20 text-white/70 font-mono"
+                          >
+                            {variable}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {selectedBlueprint.example && (
+                    <div>
+                      <p className="text-xs text-white/60 mb-2">Example Output:</p>
+                      <p className="text-xs text-white/80 bg-white/10 border border-white/20 rounded-lg p-3 whitespace-pre-wrap">
+                        {selectedBlueprint.example}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
           )}
 
           <p className="text-xs text-white/60 mt-2">
-            Blueprints provide structure and consistency while still allowing AI personalization
+            Blueprints provide structure and consistency while still allowing AI personalization.
           </p>
         </div>
 

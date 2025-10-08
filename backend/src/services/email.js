@@ -71,3 +71,22 @@ export const sendPasswordResetEmail = async ({ to, resetLink, expiresAt }) => {
     return false;
   }
 };
+
+export const sendEmail = async ({ to, subject, text, html }) => {
+  const transporter = getTransporter();
+
+  if (!transporter) {
+    logger.warn("Email not sent because SMTP credentials are not configured.");
+    return false;
+  }
+
+  const from = process.env.EMAIL_FROM || "WarmWelcome.ai <no-reply@warmwelcome.ai>";
+
+  try {
+    await transporter.sendMail({ from, to, subject, text: text || undefined, html });
+    return true;
+  } catch (error) {
+    logger.error("Failed to send email", error);
+    return false;
+  }
+};

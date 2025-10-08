@@ -52,4 +52,9 @@ export const authAPI = {
   resetPassword: (data) => api.post("/auth/reset-password", data),
 };
 
+export const emailAPI = {
+  preview: (data) => api.post("/emails/preview", data),
+  sendTest: (data) => api.post("/emails/send-test", data),
+};
+
 export default api;

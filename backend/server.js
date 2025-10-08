@@ -6,9 +6,11 @@ import rateLimit from "express-rate-limit";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import routes from "./src/routes/index.js";
+import { validateEnvironment } from "./src/utils/config.js";
 
 // Load environment variables
 dotenv.config();
+validateEnvironment();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

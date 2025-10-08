@@ -14,6 +14,7 @@ import CampaignDetail from "./pages/CampaignDetail";
 import Blueprints from "./pages/Blueprints";
 import BlueprintForm from "./pages/BlueprintForm";
 import Integrations from "./pages/Integrations";
+import OnboardingWizard from "./pages/OnboardingWizard";
 
 function App() {
   return (
@@ -110,6 +111,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Integrations />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute>
+                <OnboardingWizard />
               </ProtectedRoute>
             }
           />

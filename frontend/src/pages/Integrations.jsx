@@ -6,6 +6,7 @@ import CelebrationOverlay from "../components/animations/CelebrationOverlay.jsx"
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import EnvelopeAnimation from "../components/animations/EnvelopeAnimation.jsx";
 import api from "../utils/api";
+import { useOnboardingProgress } from "../context/OnboardingContext.jsx";
 
 const Integrations = () => {
   const [searchParams] = useSearchParams();
@@ -24,6 +25,8 @@ const Integrations = () => {
     loading: false,
   });
   const celebrationTimeoutRef = useRef(null);
+  const handledShopCallbackRef = useRef(false);
+  const { refresh } = useOnboardingProgress();
 
   useEffect(() => {
     return () => {
@@ -51,9 +54,9 @@ const Integrations = () => {
       fetchStores();
     }
 
-    // Check if we're coming back from OAuth callback
     const shop = searchParams.get("shop");
-    if (shop) {
+    if (shop && !handledShopCallbackRef.current) {
+      handledShopCallbackRef.current = true;
       setSuccess(`Successfully connected ${shop}!`);
       setCelebrationContent({
         title: `${shop} connected! 🎉`,
@@ -66,8 +69,9 @@ const Integrations = () => {
       celebrationTimeoutRef.current = setTimeout(() => {
         setShowCelebration(false);
       }, 2200);
+      refresh();
     }
-  }, [searchParams, activeTab, fetchStores]);
+  }, [searchParams, activeTab, fetchStores, refresh]);
 
   const handleConnect = async (e) => {
     e.preventDefault();
@@ -142,6 +146,7 @@ const Integrations = () => {
       }, 1800);
       setDisconnectDialog({ open: false, store: null, loading: false });
       await fetchStores();
+      refresh();
     } catch (err) {
       setDisconnectDialog((prev) => ({ ...prev, loading: false }));
       setError(err.response?.data?.message || "Failed to disconnect store");
@@ -165,6 +170,7 @@ const Integrations = () => {
         setShowCelebration(false);
       }, 1800);
       await fetchStores();
+      refresh();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to reconnect store");
     }
