@@ -143,31 +143,40 @@
     // Get shop from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const shop = urlParams.get('shop');
+    const shopDomainPattern = /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/i;
+    const safeShop = shopDomainPattern.test(shop ?? '') ? shop : null;
+
+    function createInfoItem(label, value) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'info-item';
+
+      const labelEl = document.createElement('div');
+      labelEl.className = 'info-label';
+      labelEl.textContent = label;
+
+      const valueEl = document.createElement('div');
+      valueEl.className = 'info-value';
+      valueEl.textContent = value;
+
+      wrapper.append(labelEl, valueEl);
+      return wrapper;
+    }
 
     function displayInfo() {
       const infoDiv = document.getElementById('info');
+      infoDiv.textContent = '';
 
-      if (shop) {
-        infoDiv.innerHTML = `
-          <div class="info-item">
-            <div class="info-label">Connected Store</div>
-            <div class="info-value">${shop}</div>
-          </div>
-          <div class="info-item">
-            <div class="info-label">Status</div>
-            <div class="info-value">Active & Ready</div>
-          </div>
-          <div class="info-item">
-            <div class="info-label">API Access</div>
-            <div class="info-value">Customers, Orders (Read/Write)</div>
-          </div>
-        `;
+      if (safeShop) {
+        infoDiv.append(
+          createInfoItem('Connected Store', safeShop),
+          createInfoItem('Status', 'Active & Ready'),
+          createInfoItem('API Access', 'Customers, Orders (Read/Write)')
+        );
       } else {
-        infoDiv.innerHTML = `
-          <div class="error">
-            Unable to detect store information. Please reinstall the app from your Shopify admin.
-          </div>
-        `;
+        const errorBox = document.createElement('div');
+        errorBox.className = 'error';
+        errorBox.textContent = 'Unable to detect store information. Please reinstall the app from your Shopify admin.';
+        infoDiv.append(errorBox);
       }
     }
 

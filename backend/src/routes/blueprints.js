@@ -7,13 +7,14 @@ import {
   updateBlueprint,
   deleteBlueprint,
 } from '../controllers/blueprints.js';
+import { validate, blueprintSchemas } from '../middleware/validation.js';
 
 const router = express.Router();
 
 router.get('/', authenticate, getBlueprints);
 router.get('/:id', authenticate, getBlueprint);
-router.post('/', authenticate, createBlueprint);
-router.put('/:id', authenticate, updateBlueprint);
+router.post('/', authenticate, validate(blueprintSchemas.create), createBlueprint);
+router.put('/:id', authenticate, validate(blueprintSchemas.update), updateBlueprint);
 router.delete('/:id', authenticate, deleteBlueprint);
 
 export default router;

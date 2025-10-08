@@ -6,9 +6,10 @@ import { errorResponse } from '../utils/helpers.js';
  */
 export const validate = (schema) => {
   return (req, res, next) => {
-    const { error } = schema.validate(req.body, {
+    const { error, value } = schema.validate(req.body, {
       abortEarly: false,
       stripUnknown: true,
+      convert: true,
     });
 
     if (error) {
@@ -22,6 +23,7 @@ export const validate = (schema) => {
       );
     }
 
+    req.body = value;
     next();
   };
 };
@@ -118,5 +120,46 @@ export const campaignSchemas = {
       'any.required': 'Status is required',
       'any.only': 'Status must be: draft, active, paused, or completed',
     }),
+  }),
+};
+
+/**
+ * Blueprint validation schemas
+ */
+export const blueprintSchemas = {
+  create: Joi.object({
+    name: Joi.string().trim().min(1).required().messages({
+      'string.empty': 'Blueprint name is required',
+      'any.required': 'Blueprint name is required',
+    }),
+    description: Joi.string().trim().allow('', null).optional(),
+    category: Joi.string().trim().allow('', null).optional(),
+    subjectPattern: Joi.string().trim().min(1).required().messages({
+      'string.empty': 'Subject pattern is required',
+      'any.required': 'Subject pattern is required',
+    }),
+    structure: Joi.object().required().messages({
+      'any.required': 'Structure is required',
+      'object.base': 'Structure must be an object',
+    }),
+    variables: Joi.array().items(Joi.string().trim().min(1)).min(1).required().messages({
+      'array.min': 'Provide at least one required variable',
+      'any.required': 'Variables are required',
+    }),
+    optionalVars: Joi.array().items(Joi.string().trim().min(1)).optional().allow(null),
+    example: Joi.string().trim().allow('', null).optional(),
+  }),
+
+  update: Joi.object({
+    name: Joi.string().trim().optional(),
+    description: Joi.string().trim().allow('', null).optional(),
+    category: Joi.string().trim().allow('', null).optional(),
+    subjectPattern: Joi.string().trim().optional(),
+    structure: Joi.object().optional(),
+    variables: Joi.array().items(Joi.string().trim().min(1)).min(1).optional(),
+    optionalVars: Joi.array().items(Joi.string().trim().min(1)).allow(null).optional(),
+    example: Joi.string().trim().allow('', null).optional(),
+  }).min(1).messages({
+    'object.min': 'Provide at least one field to update',
   }),
 };

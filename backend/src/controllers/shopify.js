@@ -5,6 +5,9 @@ import { errorResponse, successResponse, asyncHandler } from '../utils/helpers.j
 import { encrypt, decrypt } from '../utils/encryption.js';
 import { logger } from '../utils/logger.js';
 
+const DEFAULT_CUSTOMER_LIMIT = 50;
+const MAX_CUSTOMER_LIMIT = 250;
+
 const getScopes = () => {
   const rawScopes = process.env.SHOPIFY_SCOPES || '';
   return rawScopes
@@ -29,23 +32,72 @@ const buildInstallUrl = ({ shop, state }) => {
   return `https://${shop}/admin/oauth/authorize?${params.toString()}`;
 };
 
+const SHOPIFY_HMAC_REGEX = /^[0-9a-f]{64}$/i;
+
+const getFirstParam = (value) => {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+  return value;
+};
+
+const buildHmacMessage = (query) => {
+  const entries = [];
+  let index = 0;
+
+  for (const key of Object.keys(query)) {
+    if (key === 'hmac' || key === 'signature') {
+      continue;
+    }
+
+    const rawValue = query[key];
+    if (Array.isArray(rawValue)) {
+      for (const value of rawValue) {
+        if (value === undefined || value === null) continue;
+        entries.push({ key, value: String(value), index: index++ });
+      }
+    } else if (rawValue !== undefined && rawValue !== null) {
+      entries.push({ key, value: String(rawValue), index: index++ });
+    }
+  }
+
+  entries.sort((a, b) => {
+    const keyCompare = a.key.localeCompare(b.key);
+    return keyCompare !== 0 ? keyCompare : a.index - b.index;
+  });
+
+  return entries.map(({ key, value }) => `${key}=${value}`).join('&');
+};
+
 const verifyHmac = (query) => {
-  const { hmac, ...rest } = query;
-  const message = Object.keys(rest)
-    .sort()
-    .map((key) => {
-      const value = rest[key];
-      const normalized = Array.isArray(value) ? value.join(',') : value;
-      return `${key}=${normalized}`;
-    })
-    .join('&');
+  const rawHmac = getFirstParam(query.hmac);
+  if (typeof rawHmac !== 'string' || !SHOPIFY_HMAC_REGEX.test(rawHmac)) {
+    return false;
+  }
 
+  const secret = process.env.SHOPIFY_API_SECRET;
+  if (!secret) {
+    return false;
+  }
+
+  const message = buildHmacMessage(query);
   const generated = crypto
-    .createHmac('sha256', process.env.SHOPIFY_API_SECRET)
-    .update(Buffer.from(message))
-    .digest('hex');
+    .createHmac('sha256', secret)
+    .update(Buffer.from(message, 'utf-8'))
+    .digest();
 
-  return generated === hmac;
+  let provided;
+  try {
+    provided = Buffer.from(rawHmac, 'hex');
+  } catch {
+    return false;
+  }
+
+  if (provided.length !== generated.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(generated, provided);
 };
 
 const decodeState = (state) => {
@@ -183,7 +235,11 @@ export const listStores = asyncHandler(async (req, res) => {
 
 export const fetchCustomers = asyncHandler(async (req, res) => {
   const { storeId } = req.params;
-  const { limit = 50 } = req.query;
+  const { limit: limitParam } = req.query;
+  const parsedLimit = Number.parseInt(Array.isArray(limitParam) ? limitParam[0] : limitParam ?? '', 10);
+  const limit = Number.isFinite(parsedLimit) && parsedLimit > 0
+    ? Math.min(parsedLimit, MAX_CUSTOMER_LIMIT)
+    : DEFAULT_CUSTOMER_LIMIT;
 
   const store = await prisma.shopifyStore.findFirst({
     where: {
@@ -201,7 +257,8 @@ export const fetchCustomers = asyncHandler(async (req, res) => {
     // Decrypt access token for API use
     const decryptedToken = decrypt(store.accessToken);
 
-    const response = await fetch(`https://${store.shopDomain}/admin/api/2024-10/customers.json?limit=${limit}`, {
+    const searchParams = new URLSearchParams({ limit: String(limit) });
+    const response = await fetch(`https://${store.shopDomain}/admin/api/2024-10/customers.json?${searchParams.toString()}`, {
       headers: {
         'X-Shopify-Access-Token': decryptedToken,
         'Content-Type': 'application/json',
