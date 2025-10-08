@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import Layout from '../components/Layout';
-import Alert from '../components/Alert';
-import api from '../utils/api';
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Layout from "../components/Layout";
+import Alert from "../components/Alert";
+import api from "../utils/api";
 
 const BlueprintForm = () => {
   const { id } = useParams();
@@ -10,29 +10,29 @@ const BlueprintForm = () => {
   const isEdit = !!id;
 
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    category: 'welcome',
-    subjectPattern: '',
-    structure: '',
+    name: "",
+    description: "",
+    category: "welcome",
+    subjectPattern: "",
+    structure: "",
     variables: [],
     optionalVars: [],
-    example: '',
+    example: "",
   });
-  const [newVariable, setNewVariable] = useState('');
-  const [newOptionalVar, setNewOptionalVar] = useState('');
+  const [newVariable, setNewVariable] = useState("");
+  const [newOptionalVar, setNewOptionalVar] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const categories = [
-    { value: 'welcome', label: 'Welcome New Customers', icon: '👋' },
-    { value: 're-engage', label: 'Re-engage Inactive', icon: '💤' },
-    { value: 'upsell', label: 'Upsell & Cross-sell', icon: '🚀' },
-    { value: 'milestone', label: 'Celebrate Milestones', icon: '🎉' },
-    { value: 'nurture', label: 'Nurture Leads', icon: '🌱' },
-    { value: 'feedback', label: 'Request Feedback', icon: '💬' },
+    { value: "welcome", label: "Welcome New Customers", icon: "👋" },
+    { value: "re-engage", label: "Re-engage Inactive", icon: "💤" },
+    { value: "upsell", label: "Upsell & Cross-sell", icon: "🚀" },
+    { value: "milestone", label: "Celebrate Milestones", icon: "🎉" },
+    { value: "nurture", label: "Nurture Leads", icon: "🌱" },
+    { value: "feedback", label: "Request Feedback", icon: "💬" },
   ];
 
   const fetchBlueprint = useCallback(async () => {
@@ -41,17 +41,20 @@ const BlueprintForm = () => {
       const response = await api.get(`/blueprints/${id}`);
       const blueprint = response.data.data;
       setFormData({
-        name: blueprint.name || '',
-        description: blueprint.description || '',
-        category: blueprint.category || 'welcome',
-        subjectPattern: blueprint.subjectPattern || '',
-        structure: typeof blueprint.structure === 'object' ? JSON.stringify(blueprint.structure, null, 2) : blueprint.structure || '',
+        name: blueprint.name || "",
+        description: blueprint.description || "",
+        category: blueprint.category || "welcome",
+        subjectPattern: blueprint.subjectPattern || "",
+        structure:
+          typeof blueprint.structure === "object"
+            ? JSON.stringify(blueprint.structure, null, 2)
+            : blueprint.structure || "",
         variables: blueprint.variables || [],
         optionalVars: blueprint.optionalVars || [],
-        example: blueprint.example || '',
+        example: blueprint.example || "",
       });
     } catch (err) {
-      setError('Failed to load blueprint');
+      setError("Failed to load blueprint");
       console.error(err);
     } finally {
       setLoadingData(false);
@@ -68,41 +71,41 @@ const BlueprintForm = () => {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) setError('');
+    if (error) setError("");
   };
 
   const handleAddVariable = () => {
     if (newVariable.trim() && !formData.variables.includes(newVariable.trim())) {
       setFormData({ ...formData, variables: [...formData.variables, newVariable.trim()] });
-      setNewVariable('');
+      setNewVariable("");
     }
   };
 
-  const handleRemoveVariable = (index) => {
+  const handleRemoveVariable = (value) => {
     setFormData({
       ...formData,
-      variables: formData.variables.filter((_, i) => i !== index)
+      variables: formData.variables.filter((item) => item !== value),
     });
   };
 
   const handleAddOptionalVar = () => {
     if (newOptionalVar.trim() && !formData.optionalVars.includes(newOptionalVar.trim())) {
       setFormData({ ...formData, optionalVars: [...formData.optionalVars, newOptionalVar.trim()] });
-      setNewOptionalVar('');
+      setNewOptionalVar("");
     }
   };
 
-  const handleRemoveOptionalVar = (index) => {
+  const handleRemoveOptionalVar = (value) => {
     setFormData({
       ...formData,
-      optionalVars: formData.optionalVars.filter((_, i) => i !== index)
+      optionalVars: formData.optionalVars.filter((item) => item !== value),
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       // Parse structure to validate JSON
@@ -110,7 +113,7 @@ const BlueprintForm = () => {
       try {
         parsedStructure = JSON.parse(formData.structure);
       } catch (err) {
-        setError('Invalid JSON in structure field');
+        setError("Invalid JSON in structure field");
         setLoading(false);
         return;
       }
@@ -128,16 +131,18 @@ const BlueprintForm = () => {
 
       if (isEdit) {
         await api.put(`/blueprints/${id}`, payload);
-        setSuccess('Blueprint updated successfully!');
+        setSuccess("Blueprint updated successfully!");
       } else {
-        await api.post('/blueprints', payload);
-        setSuccess('Blueprint created successfully!');
+        await api.post("/blueprints", payload);
+        setSuccess("Blueprint created successfully!");
       }
 
-      setTimeout(() => navigate('/blueprints'), 1500);
+      setTimeout(() => navigate("/blueprints"), 1500);
     } catch (err) {
-      setError(err.response?.data?.message || `Failed to ${isEdit ? 'update' : 'create'} blueprint`);
-      console.error('Failed to save blueprint', err);
+      setError(
+        err.response?.data?.message || `Failed to ${isEdit ? "update" : "create"} blueprint`,
+      );
+      console.error("Failed to save blueprint", err);
     } finally {
       setLoading(false);
     }
@@ -147,7 +152,7 @@ const BlueprintForm = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
         </div>
       </Layout>
     );
@@ -157,24 +162,24 @@ const BlueprintForm = () => {
     <Layout>
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-white mb-2">
-          {isEdit ? 'Edit Blueprint' : 'Create New Blueprint'}
+          {isEdit ? "Edit Blueprint" : "Create New Blueprint"}
         </h1>
         <p className="text-lg text-white/80">
           {isEdit
-            ? 'Update your email blueprint template'
-            : 'Define a reusable email structure with variables'}
+            ? "Update your email blueprint template"
+            : "Define a reusable email structure with variables"}
         </p>
       </div>
 
       {success && (
         <div className="mb-6">
-          <Alert type="success" message={success} onClose={() => setSuccess('')} duration={3000} />
+          <Alert type="success" message={success} onClose={() => setSuccess("")} duration={3000} />
         </div>
       )}
 
       {error && (
         <div className="mb-6">
-          <Alert type="error" message={error} onClose={() => setError('')} duration={5000} />
+          <Alert type="error" message={error} onClose={() => setError("")} duration={5000} />
         </div>
       )}
 
@@ -240,7 +245,8 @@ const BlueprintForm = () => {
         <div className="glass-card">
           <h2 className="text-2xl font-bold text-white mb-2">Subject Pattern *</h2>
           <p className="text-sm text-white/70 mb-4">
-            Use variables in curly braces, e.g., Welcome {'{'}customerName{'}'} to {'{'}storeName{'}'}
+            Use variables in curly braces, e.g., Welcome {"{"}customerName{"}"} to {"{"}storeName
+            {"}"}
           </p>
 
           <input
@@ -268,30 +274,31 @@ const BlueprintForm = () => {
                 type="text"
                 value={newVariable}
                 onChange={(e) => setNewVariable(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddVariable())}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddVariable();
+                  }
+                }}
                 placeholder="e.g., customerName"
                 className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent font-mono"
               />
-              <button
-                type="button"
-                onClick={handleAddVariable}
-                className="glass-button"
-              >
+              <button type="button" onClick={handleAddVariable} className="glass-button">
                 Add
               </button>
             </div>
 
             {formData.variables.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {formData.variables.map((variable, idx) => (
+                {formData.variables.map((variable) => (
                   <span
-                    key={idx}
+                    key={`required-${variable}`}
                     className="inline-flex items-center gap-2 px-3 py-2 rounded bg-orange-500/20 border border-orange-400/30 text-orange-100 font-mono"
                   >
                     {variable}
                     <button
                       type="button"
-                      onClick={() => handleRemoveVariable(idx)}
+                      onClick={() => handleRemoveVariable(variable)}
                       className="text-orange-100 hover:text-white"
                     >
                       ×
@@ -316,30 +323,31 @@ const BlueprintForm = () => {
                 type="text"
                 value={newOptionalVar}
                 onChange={(e) => setNewOptionalVar(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddOptionalVar())}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddOptionalVar();
+                  }
+                }}
                 placeholder="e.g., discountCode"
                 className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent font-mono"
               />
-              <button
-                type="button"
-                onClick={handleAddOptionalVar}
-                className="glass-button"
-              >
+              <button type="button" onClick={handleAddOptionalVar} className="glass-button">
                 Add
               </button>
             </div>
 
             {formData.optionalVars.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {formData.optionalVars.map((variable, idx) => (
+                {formData.optionalVars.map((variable) => (
                   <span
-                    key={idx}
+                    key={`optional-${variable}`}
                     className="inline-flex items-center gap-2 px-3 py-2 rounded bg-white/10 border border-white/20 text-white/90 font-mono"
                   >
                     {variable}
                     <button
                       type="button"
-                      onClick={() => handleRemoveOptionalVar(idx)}
+                      onClick={() => handleRemoveOptionalVar(variable)}
                       className="text-white/70 hover:text-white"
                     >
                       ×
@@ -355,7 +363,7 @@ const BlueprintForm = () => {
         <div className="glass-card">
           <h2 className="text-2xl font-bold text-white mb-2">Email Structure (JSON) *</h2>
           <p className="text-sm text-white/70 mb-4">
-            Define the email structure as JSON. Use variables in format {'{'}variableName{'}'}
+            Define the email structure as JSON. Use variables in format {"{"}variableName{"}"}
           </p>
 
           <textarea
@@ -396,14 +404,20 @@ const BlueprintForm = () => {
         <div className="flex gap-3">
           <button
             type="submit"
-            disabled={loading || !formData.name.trim() || !formData.subjectPattern.trim() || !formData.structure.trim() || formData.variables.length === 0}
+            disabled={
+              loading ||
+              !formData.name.trim() ||
+              !formData.subjectPattern.trim() ||
+              !formData.structure.trim() ||
+              formData.variables.length === 0
+            }
             className="glass-button flex-1 justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Saving...' : isEdit ? 'Update Blueprint' : 'Create Blueprint'}
+            {loading ? "Saving..." : isEdit ? "Update Blueprint" : "Create Blueprint"}
           </button>
           <button
             type="button"
-            onClick={() => navigate('/blueprints')}
+            onClick={() => navigate("/blueprints")}
             className="glass-button justify-center"
           >
             Cancel

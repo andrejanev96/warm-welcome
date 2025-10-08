@@ -1,5 +1,5 @@
-import prisma from '../utils/database.js';
-import { asyncHandler, successResponse } from '../utils/helpers.js';
+import prisma from "../utils/database.js";
+import { asyncHandler, successResponse } from "../utils/helpers.js";
 
 /**
  * Get onboarding progress for authenticated user
@@ -25,36 +25,36 @@ export const getOnboardingProgress = asyncHandler(async (req, res) => {
 
   const steps = [
     {
-      id: 'connect_store',
-      title: 'Connect your Shopify store',
-      description: 'Link your e-commerce store to start collecting customer data',
+      id: "connect_store",
+      title: "Connect your Shopify store",
+      description: "Link your e-commerce store to start collecting customer data",
       completed: stores > 0,
-      link: '/integrations',
-      icon: '🏪',
+      link: "/integrations",
+      icon: "🏪",
     },
     {
-      id: 'setup_brand_voice',
-      title: 'Define your brand voice',
-      description: 'Teach AI how to write emails that sound like you',
+      id: "setup_brand_voice",
+      title: "Define your brand voice",
+      description: "Teach AI how to write emails that sound like you",
       completed: Boolean(brandVoice),
-      link: '/brand-voice',
-      icon: '🎤',
+      link: "/brand-voice",
+      icon: "🎤",
     },
     {
-      id: 'create_blueprint',
-      title: 'Create your first blueprint',
-      description: 'Design a reusable email template structure',
+      id: "create_blueprint",
+      title: "Create your first blueprint",
+      description: "Design a reusable email template structure",
       completed: blueprints > 0,
-      link: '/blueprints/new',
-      icon: '📋',
+      link: "/blueprints/new",
+      icon: "📋",
     },
     {
-      id: 'launch_campaign',
-      title: 'Launch your first campaign',
-      description: 'Set up AI-powered automated emails',
+      id: "launch_campaign",
+      title: "Launch your first campaign",
+      description: "Set up AI-powered automated emails",
       completed: campaigns > 0,
-      link: '/campaigns/new',
-      icon: '🚀',
+      link: "/campaigns/new",
+      icon: "🚀",
     },
   ];
 
@@ -69,6 +69,6 @@ export const getOnboardingProgress = asyncHandler(async (req, res) => {
       totalSteps,
       progress,
       isComplete: completedCount === totalSteps,
-    })
+    }),
   );
 });

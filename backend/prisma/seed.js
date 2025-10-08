@@ -1,13 +1,13 @@
-import bcrypt from 'bcryptjs';
-import { PrismaClient } from '@prisma/client';
+import bcrypt from "bcryptjs";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function createDemoUser() {
-  const email = process.env.SEED_USER_EMAIL || 'demo@warmwelcome.ai';
-  const password = process.env.SEED_USER_PASSWORD || 'WarmWelcome123!';
-  const firstName = process.env.SEED_USER_FIRST_NAME || 'Demo';
-  const lastName = process.env.SEED_USER_LAST_NAME || 'User';
+  const email = process.env.SEED_USER_EMAIL || "demo@warmwelcome.ai";
+  const password = process.env.SEED_USER_PASSWORD || "WarmWelcome123!";
+  const firstName = process.env.SEED_USER_FIRST_NAME || "Demo";
+  const lastName = process.env.SEED_USER_LAST_NAME || "User";
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
@@ -30,16 +30,16 @@ async function createDemoUser() {
 }
 
 async function main() {
-  console.log('🌱 Seeding database for WarmWelcome.ai...');
+  console.log("🌱 Seeding database for WarmWelcome.ai...");
 
   await createDemoUser();
 
-  console.log('🎉 Seeding complete!');
+  console.log("🎉 Seeding complete!");
 }
 
 main()
   .catch((error) => {
-    console.error('❌ Error seeding database:', error);
+    console.error("❌ Error seeding database:", error);
     process.exit(1);
   })
   .finally(async () => {

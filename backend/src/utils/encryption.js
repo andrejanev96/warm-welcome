@@ -1,12 +1,12 @@
-import crypto from 'crypto';
-import { logger } from './logger.js';
+import crypto from "node:crypto";
+import { logger } from "./logger.js";
 
 /**
  * Encryption utilities for sensitive data
  * Uses AES-256-GCM encryption
  */
 
-const ALGORITHM = 'aes-256-gcm';
+const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 16;
 const AUTH_TAG_LENGTH = 16;
 const SALT_LENGTH = 64;
@@ -17,7 +17,7 @@ const ITERATIONS = 100000;
  * Derive encryption key from secret
  */
 const deriveKey = (secret, salt) => {
-  return crypto.pbkdf2Sync(secret, salt, ITERATIONS, KEY_LENGTH, 'sha256');
+  return crypto.pbkdf2Sync(secret, salt, ITERATIONS, KEY_LENGTH, "sha256");
 };
 
 /**
@@ -26,10 +26,10 @@ const deriveKey = (secret, salt) => {
 const getEncryptionSecret = () => {
   const secret = process.env.ENCRYPTION_KEY;
   if (!secret) {
-    throw new Error('ENCRYPTION_KEY environment variable is not set');
+    throw new Error("ENCRYPTION_KEY environment variable is not set");
   }
   if (secret.length < 32) {
-    throw new Error('ENCRYPTION_KEY must be at least 32 characters long');
+    throw new Error("ENCRYPTION_KEY must be at least 32 characters long");
   }
   return secret;
 };
@@ -56,17 +56,17 @@ export const encrypt = (text) => {
     const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
 
     // Encrypt
-    let encrypted = cipher.update(text, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
+    let encrypted = cipher.update(text, "utf8", "hex");
+    encrypted += cipher.final("hex");
 
     // Get auth tag
     const authTag = cipher.getAuthTag();
 
     // Return combined format: salt:iv:authTag:encrypted
-    return `${salt.toString('hex')}:${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
+    return `${salt.toString("hex")}:${iv.toString("hex")}:${authTag.toString("hex")}:${encrypted}`;
   } catch (error) {
-    logger.error('Encryption error:', error.message);
-    throw new Error('Failed to encrypt data');
+    logger.error("Encryption error:", error.message);
+    throw new Error("Failed to encrypt data");
   }
 };
 
@@ -82,14 +82,14 @@ export const decrypt = (encryptedData) => {
     const secret = getEncryptionSecret();
 
     // Parse encrypted data
-    const parts = encryptedData.split(':');
+    const parts = encryptedData.split(":");
     if (parts.length !== 4) {
-      throw new Error('Invalid encrypted data format');
+      throw new Error("Invalid encrypted data format");
     }
 
-    const salt = Buffer.from(parts[0], 'hex');
-    const iv = Buffer.from(parts[1], 'hex');
-    const authTag = Buffer.from(parts[2], 'hex');
+    const salt = Buffer.from(parts[0], "hex");
+    const iv = Buffer.from(parts[1], "hex");
+    const authTag = Buffer.from(parts[2], "hex");
     const encrypted = parts[3];
 
     // Derive key from secret and salt
@@ -100,13 +100,13 @@ export const decrypt = (encryptedData) => {
     decipher.setAuthTag(authTag);
 
     // Decrypt
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
+    let decrypted = decipher.update(encrypted, "hex", "utf8");
+    decrypted += decipher.final("utf8");
 
     return decrypted;
   } catch (error) {
-    logger.error('Decryption error:', error.message);
-    throw new Error('Failed to decrypt data');
+    logger.error("Decryption error:", error.message);
+    throw new Error("Failed to decrypt data");
   }
 };
 
@@ -114,7 +114,7 @@ export const decrypt = (encryptedData) => {
  * Check if a value is encrypted (has the expected format)
  */
 export const isEncrypted = (value) => {
-  if (!value || typeof value !== 'string') return false;
-  const parts = value.split(':');
+  if (!value || typeof value !== "string") return false;
+  const parts = value.split(":");
   return parts.length === 4;
 };

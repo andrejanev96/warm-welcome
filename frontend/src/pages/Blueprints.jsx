@@ -1,35 +1,39 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import Layout from '../components/Layout';
-import Alert from '../components/Alert';
-import ConfirmDialog from '../components/ConfirmDialog.jsx';
-import api from '../utils/api';
+import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
+import Layout from "../components/Layout";
+import Alert from "../components/Alert";
+import ConfirmDialog from "../components/ConfirmDialog.jsx";
+import api from "../utils/api";
 
 const Blueprints = () => {
   const [blueprints, setBlueprints] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [deleteDialog, setDeleteDialog] = useState({ open: false, blueprint: null, loading: false });
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    blueprint: null,
+    loading: false,
+  });
 
   const categories = {
-    welcome: { icon: '👋', label: 'Welcome' },
-    're-engage': { icon: '💤', label: 'Re-engage' },
-    upsell: { icon: '🚀', label: 'Upsell' },
-    milestone: { icon: '🎉', label: 'Milestone' },
-    nurture: { icon: '🌱', label: 'Nurture' },
-    feedback: { icon: '💬', label: 'Feedback' },
+    welcome: { icon: "👋", label: "Welcome" },
+    "re-engage": { icon: "💤", label: "Re-engage" },
+    upsell: { icon: "🚀", label: "Upsell" },
+    milestone: { icon: "🎉", label: "Milestone" },
+    nurture: { icon: "🌱", label: "Nurture" },
+    feedback: { icon: "💬", label: "Feedback" },
   };
 
   const fetchBlueprints = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await api.get('/blueprints');
+      const response = await api.get("/blueprints");
       setBlueprints(response.data.data || []);
-      setError('');
+      setError("");
     } catch (err) {
-      setError('Failed to load blueprints');
-      console.error('Failed to load blueprints', err);
+      setError("Failed to load blueprints");
+      console.error("Failed to load blueprints", err);
     } finally {
       setLoading(false);
     }
@@ -44,7 +48,9 @@ const Blueprints = () => {
   };
 
   const closeDeleteDialog = () => {
-    setDeleteDialog((prev) => (prev.loading ? prev : { open: false, blueprint: null, loading: false }));
+    setDeleteDialog((prev) =>
+      prev.loading ? prev : { open: false, blueprint: null, loading: false },
+    );
   };
 
   const handleDelete = async () => {
@@ -57,13 +63,13 @@ const Blueprints = () => {
 
     try {
       await api.delete(`/blueprints/${blueprint.id}`);
-      setSuccess('Blueprint deleted successfully');
+      setSuccess("Blueprint deleted successfully");
       setDeleteDialog({ open: false, blueprint: null, loading: false });
       fetchBlueprints();
     } catch (err) {
       setDeleteDialog((prev) => ({ ...prev, loading: false }));
-      setError(err.response?.data?.message || 'Failed to delete blueprint');
-      console.error('Failed to delete blueprint', err);
+      setError(err.response?.data?.message || "Failed to delete blueprint");
+      console.error("Failed to delete blueprint", err);
     }
   };
 
@@ -86,13 +92,13 @@ const Blueprints = () => {
       {/* Alerts */}
       {success && (
         <div className="mb-6">
-          <Alert type="success" message={success} onClose={() => setSuccess('')} duration={3000} />
+          <Alert type="success" message={success} onClose={() => setSuccess("")} duration={3000} />
         </div>
       )}
 
       {error && (
         <div className="mb-6">
-          <Alert type="error" message={error} onClose={() => setError('')} duration={5000} />
+          <Alert type="error" message={error} onClose={() => setError("")} duration={5000} />
         </div>
       )}
 
@@ -101,7 +107,7 @@ const Blueprints = () => {
         {/* Loading State */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
           </div>
         ) : blueprints.length === 0 ? (
           /* Empty State */
@@ -127,9 +133,7 @@ const Blueprints = () => {
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-white mb-2">
-                        {blueprint.name}
-                      </h3>
+                      <h3 className="text-xl font-semibold text-white mb-2">{blueprint.name}</h3>
                       {blueprint.description && (
                         <p className="text-sm text-white/70">{blueprint.description}</p>
                       )}
@@ -155,9 +159,9 @@ const Blueprints = () => {
                     <p className="text-xs text-white/60 mb-2">Variables:</p>
                     <div className="flex flex-wrap gap-2">
                       {blueprint.variables && blueprint.variables.length > 0 ? (
-                        blueprint.variables.map((variable, idx) => (
+                        blueprint.variables.map((variable) => (
                           <span
-                            key={idx}
+                            key={`${blueprint.id}-${variable}`}
                             className="px-2 py-1 text-xs rounded bg-orange-500/20 border border-orange-400/30 text-orange-100 font-mono"
                           >
                             {variable}
@@ -169,9 +173,9 @@ const Blueprints = () => {
                     </div>
                     {blueprint.optionalVars && blueprint.optionalVars.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-2">
-                        {blueprint.optionalVars.map((variable, idx) => (
+                        {blueprint.optionalVars.map((variable) => (
                           <span
-                            key={idx}
+                            key={`${blueprint.id}-${variable}-optional`}
                             className="px-2 py-1 text-xs rounded bg-white/10 border border-white/20 text-white/70 font-mono"
                           >
                             {variable} (optional)
@@ -190,6 +194,7 @@ const Blueprints = () => {
                       Edit
                     </Link>
                     <button
+                      type="button"
                       onClick={() => requestDelete(blueprint)}
                       className="glass-button bg-red-500/30 hover:bg-red-500/40"
                       title="Delete blueprint"
@@ -207,7 +212,11 @@ const Blueprints = () => {
       <ConfirmDialog
         open={deleteDialog.open}
         title="Delete blueprint?"
-        message={deleteDialog.blueprint ? `This will permanently remove ${deleteDialog.blueprint.name}.` : ''}
+        message={
+          deleteDialog.blueprint
+            ? `This will permanently remove ${deleteDialog.blueprint.name}.`
+            : ""
+        }
         confirmLabel="Delete"
         cancelLabel="Cancel"
         onConfirm={handleDelete}

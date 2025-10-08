@@ -1,5 +1,5 @@
-import prisma from '../utils/database.js';
-import { asyncHandler, successResponse, errorResponse } from '../utils/helpers.js';
+import prisma from "../utils/database.js";
+import { asyncHandler, successResponse, errorResponse } from "../utils/helpers.js";
 
 const parseJSON = (value) => {
   if (!value) return null;
@@ -30,7 +30,7 @@ export const getBlueprints = asyncHandler(async (req, res) => {
 
   const blueprints = await prisma.emailBlueprint.findMany({
     where,
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
   });
 
   const serialized = blueprints.map(serializeBlueprint);
@@ -51,7 +51,7 @@ export const getBlueprint = asyncHandler(async (req, res) => {
   });
 
   if (!blueprint) {
-    return res.status(404).json(errorResponse('Blueprint not found'));
+    return res.status(404).json(errorResponse("Blueprint not found"));
   }
 
   res.status(200).json(successResponse(serializeBlueprint(blueprint)));
@@ -61,10 +61,21 @@ export const getBlueprint = asyncHandler(async (req, res) => {
  * Create new blueprint
  */
 export const createBlueprint = asyncHandler(async (req, res) => {
-  const { name, description, category, subjectPattern, structure, variables, optionalVars, example } = req.body;
+  const {
+    name,
+    description,
+    category,
+    subjectPattern,
+    structure,
+    variables,
+    optionalVars,
+    example,
+  } = req.body;
 
   if (!name || !subjectPattern || !structure || !variables) {
-    return res.status(400).json(errorResponse('Name, subject pattern, structure, and variables are required'));
+    return res
+      .status(400)
+      .json(errorResponse("Name, subject pattern, structure, and variables are required"));
   }
 
   const blueprint = await prisma.emailBlueprint.create({
@@ -81,7 +92,9 @@ export const createBlueprint = asyncHandler(async (req, res) => {
     },
   });
 
-  res.status(201).json(successResponse(serializeBlueprint(blueprint), 'Blueprint created successfully'));
+  res
+    .status(201)
+    .json(successResponse(serializeBlueprint(blueprint), "Blueprint created successfully"));
 });
 
 /**
@@ -89,7 +102,16 @@ export const createBlueprint = asyncHandler(async (req, res) => {
  */
 export const updateBlueprint = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, description, category, subjectPattern, structure, variables, optionalVars, example } = req.body;
+  const {
+    name,
+    description,
+    category,
+    subjectPattern,
+    structure,
+    variables,
+    optionalVars,
+    example,
+  } = req.body;
 
   const existingBlueprint = await prisma.emailBlueprint.findFirst({
     where: {
@@ -99,7 +121,7 @@ export const updateBlueprint = asyncHandler(async (req, res) => {
   });
 
   if (!existingBlueprint) {
-    return res.status(404).json(errorResponse('Blueprint not found'));
+    return res.status(404).json(errorResponse("Blueprint not found"));
   }
 
   const data = {};
@@ -141,7 +163,9 @@ export const updateBlueprint = asyncHandler(async (req, res) => {
     data,
   });
 
-  res.status(200).json(successResponse(serializeBlueprint(updatedBlueprint), 'Blueprint updated successfully'));
+  res
+    .status(200)
+    .json(successResponse(serializeBlueprint(updatedBlueprint), "Blueprint updated successfully"));
 });
 
 /**
@@ -161,19 +185,23 @@ export const deleteBlueprint = asyncHandler(async (req, res) => {
   });
 
   if (!blueprint) {
-    return res.status(404).json(errorResponse('Blueprint not found'));
+    return res.status(404).json(errorResponse("Blueprint not found"));
   }
 
   // Check if blueprint is being used by any campaigns
   if (blueprint.campaigns.length > 0) {
-    return res.status(400).json(
-      errorResponse(`Cannot delete blueprint. It is being used by ${blueprint.campaigns.length} campaign(s)`)
-    );
+    return res
+      .status(400)
+      .json(
+        errorResponse(
+          `Cannot delete blueprint. It is being used by ${blueprint.campaigns.length} campaign(s)`,
+        ),
+      );
   }
 
   await prisma.emailBlueprint.delete({
     where: { id },
   });
 
-  res.status(200).json(successResponse(null, 'Blueprint deleted successfully'));
+  res.status(200).json(successResponse(null, "Blueprint deleted successfully"));
 });

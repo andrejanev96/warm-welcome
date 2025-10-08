@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import Layout from '../components/Layout';
-import api from '../utils/api';
+import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
+import Layout from "../components/Layout";
+import api from "../utils/api";
 
 const Customers = () => {
   const [loading, setLoading] = useState(true);
@@ -9,7 +9,7 @@ const Customers = () => {
   const [selectedStore, setSelectedStore] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [loadingCustomers, setLoadingCustomers] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [expandedCustomer, setExpandedCustomer] = useState(null);
 
   useEffect(() => {
@@ -18,8 +18,8 @@ const Customers = () => {
 
   const fetchStores = async () => {
     try {
-      const response = await api.get('/shopify/stores');
-      const activeStores = (response.data.data || []).filter(store => store.isActive);
+      const response = await api.get("/shopify/stores");
+      const activeStores = (response.data.data || []).filter((store) => store.isActive);
       setStores(activeStores);
 
       // Auto-select first active store
@@ -27,8 +27,8 @@ const Customers = () => {
         setSelectedStore(activeStores[0].id);
       }
     } catch (err) {
-      console.error('Error fetching stores:', err);
-      setError('Failed to load stores');
+      console.error("Error fetching stores:", err);
+      setError("Failed to load stores");
     } finally {
       setLoading(false);
     }
@@ -39,12 +39,12 @@ const Customers = () => {
 
     try {
       setLoadingCustomers(true);
-      setError('');
+      setError("");
       const response = await api.get(`/shopify/stores/${selectedStore}/customers`);
       setCustomers(response.data.data || []);
     } catch (err) {
-      console.error('Error fetching customers:', err);
-      setError('Failed to load customers');
+      console.error("Error fetching customers:", err);
+      setError("Failed to load customers");
     } finally {
       setLoadingCustomers(false);
     }
@@ -57,34 +57,51 @@ const Customers = () => {
   }, [selectedStore, fetchCustomers]);
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
+    if (!dateString) return "Never";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
   const formatDateTime = (dateString) => {
-    if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
+    if (!dateString) return "Never";
+    return new Date(dateString).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
     });
   };
 
   const getStatusBadge = (status) => {
     const config = {
-      sent: { bg: 'bg-green-500/20', border: 'border-green-500/40', text: 'text-green-100', label: 'Sent' },
-      pending: { bg: 'bg-yellow-500/20', border: 'border-yellow-500/40', text: 'text-yellow-100', label: 'Pending' },
-      failed: { bg: 'bg-red-500/20', border: 'border-red-500/40', text: 'text-red-100', label: 'Failed' },
+      sent: {
+        bg: "bg-green-500/20",
+        border: "border-green-500/40",
+        text: "text-green-100",
+        label: "Sent",
+      },
+      pending: {
+        bg: "bg-yellow-500/20",
+        border: "border-yellow-500/40",
+        text: "text-yellow-100",
+        label: "Pending",
+      },
+      failed: {
+        bg: "bg-red-500/20",
+        border: "border-red-500/40",
+        text: "text-red-100",
+        label: "Failed",
+      },
     };
     const styles = config[status] || config.pending;
     return (
-      <span className={`px-2 py-1 text-xs rounded-full border ${styles.bg} ${styles.border} ${styles.text}`}>
+      <span
+        className={`px-2 py-1 text-xs rounded-full border ${styles.bg} ${styles.border} ${styles.text}`}
+      >
         {styles.label}
       </span>
     );
@@ -94,7 +111,7 @@ const Customers = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
         </div>
       </Layout>
     );
@@ -106,9 +123,7 @@ const Customers = () => {
     return (
       <Layout>
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">
-            👥 Customers
-          </h1>
+          <h1 className="text-4xl font-bold text-white mb-2">👥 Customers</h1>
           <p className="text-lg text-white/80">
             View customers and email history from your connected stores
           </p>
@@ -131,9 +146,7 @@ const Customers = () => {
   return (
     <Layout>
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-white mb-2">
-          👥 Customers
-        </h1>
+        <h1 className="text-4xl font-bold text-white mb-2">👥 Customers</h1>
         <p className="text-lg text-white/80">
           View customers and email history from your connected stores
         </p>
@@ -147,7 +160,7 @@ const Customers = () => {
           </label>
           <select
             id="store"
-            value={selectedStore || ''}
+            value={selectedStore || ""}
             onChange={(e) => setSelectedStore(e.target.value)}
             className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent"
           >
@@ -169,7 +182,7 @@ const Customers = () => {
       {/* Loading State */}
       {loadingCustomers ? (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
         </div>
       ) : customers.length === 0 ? (
         /* Empty State */
@@ -184,10 +197,7 @@ const Customers = () => {
         /* Customers List */
         <div className="space-y-4">
           {customers.map((customer) => (
-            <div
-              key={customer.id}
-              className="glass-card hover:translate-y-[-2px] transition-all"
-            >
+            <div key={customer.id} className="glass-card hover:translate-y-[-2px] transition-all">
               <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                 {/* Customer Info */}
                 <div className="flex-1 space-y-2">
@@ -207,7 +217,7 @@ const Customers = () => {
                   <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/60">
                     <div className="flex items-center gap-2">
                       <span>💰</span>
-                      <span>${customer.total_spent || '0.00'} spent</span>
+                      <span>${customer.total_spent || "0.00"} spent</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span>📦</span>
@@ -233,10 +243,13 @@ const Customers = () => {
                 {/* Actions */}
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
-                    onClick={() => setExpandedCustomer(expandedCustomer === customer.id ? null : customer.id)}
+                    type="button"
+                    onClick={() =>
+                      setExpandedCustomer(expandedCustomer === customer.id ? null : customer.id)
+                    }
                     className="glass-button"
                   >
-                    {expandedCustomer === customer.id ? 'Hide History' : 'View History'}
+                    {expandedCustomer === customer.id ? "Hide History" : "View History"}
                   </button>
                 </div>
               </div>
@@ -268,8 +281,16 @@ const Customers = () => {
                             </div>
                             <div className="text-right text-xs text-white/60">
                               {email.sentAt && <div>Sent: {formatDateTime(email.sentAt)}</div>}
-                              {email.openedAt && <div className="text-green-300">Opened: {formatDateTime(email.openedAt)}</div>}
-                              {email.clickedAt && <div className="text-blue-300">Clicked: {formatDateTime(email.clickedAt)}</div>}
+                              {email.openedAt && (
+                                <div className="text-green-300">
+                                  Opened: {formatDateTime(email.openedAt)}
+                                </div>
+                              )}
+                              {email.clickedAt && (
+                                <div className="text-blue-300">
+                                  Clicked: {formatDateTime(email.clickedAt)}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>

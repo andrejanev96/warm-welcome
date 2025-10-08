@@ -1,15 +1,15 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
-import prisma from '../utils/database.js';
-import { successResponse, errorResponse, asyncHandler } from '../utils/helpers.js';
-import { sendPasswordResetEmail } from '../services/email.js';
-import { logger } from '../utils/logger.js';
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import crypto from "node:crypto";
+import prisma from "../utils/database.js";
+import { successResponse, errorResponse, asyncHandler } from "../utils/helpers.js";
+import { sendPasswordResetEmail } from "../services/email.js";
+import { logger } from "../utils/logger.js";
 
 const getClientIp = (req) => {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string' && forwarded.length > 0) {
-    return forwarded.split(',')[0].trim();
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string" && forwarded.length > 0) {
+    return forwarded.split(",")[0].trim();
   }
 
   if (Array.isArray(forwarded) && forwarded.length > 0) {
@@ -24,7 +24,7 @@ const getClientIp = (req) => {
  */
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    expiresIn: process.env.JWT_EXPIRES_IN || "7d",
   });
 };
 
@@ -41,9 +41,7 @@ export const register = asyncHandler(async (req, res) => {
   });
 
   if (existingUser) {
-    return res.status(409).json(
-      errorResponse('An account with this email already exists')
-    );
+    return res.status(409).json(errorResponse("An account with this email already exists"));
   }
 
   // Hash password
@@ -75,8 +73,8 @@ export const register = asyncHandler(async (req, res) => {
         user,
         token,
       },
-      'Account created successfully'
-    )
+      "Account created successfully",
+    ),
   );
 });
 
@@ -93,18 +91,14 @@ export const login = asyncHandler(async (req, res) => {
   });
 
   if (!user) {
-    return res.status(401).json(
-      errorResponse('Invalid email or password')
-    );
+    return res.status(401).json(errorResponse("Invalid email or password"));
   }
 
   // Verify password
   const isPasswordValid = await bcrypt.compare(password, user.password);
 
   if (!isPasswordValid) {
-    return res.status(401).json(
-      errorResponse('Invalid email or password')
-    );
+    return res.status(401).json(errorResponse("Invalid email or password"));
   }
 
   // Generate token
@@ -119,8 +113,8 @@ export const login = asyncHandler(async (req, res) => {
         user: userWithoutPassword,
         token,
       },
-      'Login successful'
-    )
+      "Login successful",
+    ),
   );
 });
 
@@ -142,9 +136,7 @@ export const getMe = asyncHandler(async (req, res) => {
     },
   });
 
-  res.status(200).json(
-    successResponse(user, 'User profile retrieved successfully')
-  );
+  res.status(200).json(successResponse(user, "User profile retrieved successfully"));
 });
 
 /**
@@ -170,9 +162,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
     },
   });
 
-  res.status(200).json(
-    successResponse(updatedUser, 'Profile updated successfully')
-  );
+  res.status(200).json(successResponse(updatedUser, "Profile updated successfully"));
 });
 
 /**
@@ -182,9 +172,9 @@ export const updateProfile = asyncHandler(async (req, res) => {
 export const requestPasswordReset = asyncHandler(async (req, res) => {
   const { email } = req.body;
   const normalizedEmail = email?.toLowerCase();
-  const userAgent = req.get('user-agent');
+  const userAgent = req.get("user-agent");
 
-  let auditStatus = 'ignored';
+  let auditStatus = "ignored";
   let userIdForAudit = null;
 
   if (normalizedEmail) {
@@ -194,8 +184,8 @@ export const requestPasswordReset = asyncHandler(async (req, res) => {
 
     if (user) {
       userIdForAudit = user.id;
-      const rawToken = crypto.randomBytes(32).toString('hex');
-      const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+      const rawToken = crypto.randomBytes(32).toString("hex");
+      const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
       const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
       await prisma.user.update({
@@ -206,7 +196,7 @@ export const requestPasswordReset = asyncHandler(async (req, res) => {
         },
       });
 
-      const resetLinkBase = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const resetLinkBase = process.env.FRONTEND_URL || "http://localhost:5173";
       const resetLink = `${resetLinkBase}/reset-password/${rawToken}`;
 
       const sent = await sendPasswordResetEmail({
@@ -215,21 +205,21 @@ export const requestPasswordReset = asyncHandler(async (req, res) => {
         expiresAt: expires,
       });
 
-      auditStatus = sent ? 'email_sent' : 'email_failed';
+      auditStatus = sent ? "email_sent" : "email_failed";
 
       if (!sent) {
-        logger.info('Password reset email failed to send for user');
+        logger.info("Password reset email failed to send for user");
       }
     } else {
-      auditStatus = 'user_not_found';
+      auditStatus = "user_not_found";
     }
   } else {
-    auditStatus = 'invalid_email';
+    auditStatus = "invalid_email";
   }
 
   await prisma.passwordResetAudit.create({
     data: {
-      email: normalizedEmail || email || 'unknown',
+      email: normalizedEmail || email || "unknown",
       userId: userIdForAudit,
       status: auditStatus,
       requestIp: getClientIp(req),
@@ -237,9 +227,9 @@ export const requestPasswordReset = asyncHandler(async (req, res) => {
     },
   });
 
-  res.status(200).json(
-    successResponse(null, 'If that email exists in our system, a reset link has been sent.')
-  );
+  res
+    .status(200)
+    .json(successResponse(null, "If that email exists in our system, a reset link has been sent."));
 });
 
 /**
@@ -250,10 +240,10 @@ export const resetPassword = asyncHandler(async (req, res) => {
   const { token, password } = req.body;
 
   if (!token) {
-    return res.status(400).json(errorResponse('Reset token is required'));
+    return res.status(400).json(errorResponse("Reset token is required"));
   }
 
-  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
   const user = await prisma.user.findFirst({
     where: {
@@ -265,7 +255,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
   });
 
   if (!user) {
-    return res.status(400).json(errorResponse('Reset token is invalid or has expired.'));
+    return res.status(400).json(errorResponse("Reset token is invalid or has expired."));
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
@@ -279,5 +269,5 @@ export const resetPassword = asyncHandler(async (req, res) => {
     },
   });
 
-  res.status(200).json(successResponse(null, 'Password has been updated. You can now sign in.'));
+  res.status(200).json(successResponse(null, "Password has been updated. You can now sign in."));
 });

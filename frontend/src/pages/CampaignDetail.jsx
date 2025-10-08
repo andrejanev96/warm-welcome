@@ -1,32 +1,68 @@
-import { useEffect, useState, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import Layout from '../components/Layout';
-import Alert from '../components/Alert';
-import api from '../utils/api';
+import { useEffect, useState, useCallback } from "react";
+import { useParams, Link } from "react-router-dom";
+import Layout from "../components/Layout";
+import Alert from "../components/Alert";
+import api from "../utils/api";
 
 const CampaignDetail = () => {
   const { id } = useParams();
   const [campaign, setCampaign] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const goals = {
-    welcome: { label: 'Welcome New Customers', icon: '👋', description: 'Make a warm first impression' },
-    're-engage': { label: 'Re-engage Inactive', icon: '💤', description: 'Win back dormant customers' },
-    upsell: { label: 'Upsell & Cross-sell', icon: '🚀', description: 'Suggest complementary products' },
-    milestone: { label: 'Celebrate Milestones', icon: '🎉', description: 'Acknowledge customer achievements' },
-    nurture: { label: 'Nurture Leads', icon: '🌱', description: 'Build relationships over time' },
-    feedback: { label: 'Request Feedback', icon: '💬', description: 'Gather customer insights' },
+    welcome: {
+      label: "Welcome New Customers",
+      icon: "👋",
+      description: "Make a warm first impression",
+    },
+    "re-engage": {
+      label: "Re-engage Inactive",
+      icon: "💤",
+      description: "Win back dormant customers",
+    },
+    upsell: {
+      label: "Upsell & Cross-sell",
+      icon: "🚀",
+      description: "Suggest complementary products",
+    },
+    milestone: {
+      label: "Celebrate Milestones",
+      icon: "🎉",
+      description: "Acknowledge customer achievements",
+    },
+    nurture: { label: "Nurture Leads", icon: "🌱", description: "Build relationships over time" },
+    feedback: { label: "Request Feedback", icon: "💬", description: "Gather customer insights" },
   };
 
   const triggerTypes = {
-    user_signup: { label: 'User Signup', icon: '👋', description: 'When a new user creates an account' },
-    first_purchase: { label: 'First Purchase', icon: '🛍️', description: "After customer's first purchase" },
-    abandoned_cart: { label: 'Abandoned Cart', icon: '🛒', description: 'When cart is abandoned for 24h' },
-    post_purchase: { label: 'Post Purchase', icon: '📦', description: 'After a purchase is completed' },
-    no_activity: { label: 'No Activity', icon: '💤', description: 'After 30 days of inactivity' },
-    high_value: { label: 'High Value Reached', icon: '⭐', description: 'When customer reaches spending threshold' },
+    user_signup: {
+      label: "User Signup",
+      icon: "👋",
+      description: "When a new user creates an account",
+    },
+    first_purchase: {
+      label: "First Purchase",
+      icon: "🛍️",
+      description: "After customer's first purchase",
+    },
+    abandoned_cart: {
+      label: "Abandoned Cart",
+      icon: "🛒",
+      description: "When cart is abandoned for 24h",
+    },
+    post_purchase: {
+      label: "Post Purchase",
+      icon: "📦",
+      description: "After a purchase is completed",
+    },
+    no_activity: { label: "No Activity", icon: "💤", description: "After 30 days of inactivity" },
+    high_value: {
+      label: "High Value Reached",
+      icon: "⭐",
+      description: "When customer reaches spending threshold",
+    },
   };
 
   const [statusLoading, setStatusLoading] = useState(false);
@@ -36,9 +72,9 @@ const CampaignDetail = () => {
       setLoading(true);
       const response = await api.get(`/campaigns/${id}`);
       setCampaign(response.data.data);
-      setError('');
+      setError("");
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load campaign');
+      setError(err.response?.data?.message || "Failed to load campaign");
     } finally {
       setLoading(false);
     }
@@ -51,12 +87,14 @@ const CampaignDetail = () => {
   const handleStatusChange = async (newStatus) => {
     try {
       setStatusLoading(true);
-      setError('');
+      setError("");
       await api.patch(`/campaigns/${id}/status`, { status: newStatus });
-      setSuccess(`Campaign ${newStatus === 'active' ? 'activated' : newStatus === 'paused' ? 'paused' : 'completed'} successfully!`);
+      setSuccess(
+        `Campaign ${newStatus === "active" ? "activated" : newStatus === "paused" ? "paused" : "completed"} successfully!`,
+      );
       await fetchCampaign();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update campaign status');
+      setError(err.response?.data?.message || "Failed to update campaign status");
     } finally {
       setStatusLoading(false);
     }
@@ -66,7 +104,7 @@ const CampaignDetail = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
         </div>
       </Layout>
     );
@@ -96,10 +134,14 @@ const CampaignDetail = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'active': return 'bg-green-500/20 border-green-500/40 text-green-100';
-      case 'paused': return 'bg-yellow-500/20 border-yellow-500/40 text-yellow-100';
-      case 'completed': return 'bg-blue-500/20 border-blue-500/40 text-blue-100';
-      default: return 'bg-white/15 border-white/20 text-white/80';
+      case "active":
+        return "bg-green-500/20 border-green-500/40 text-green-100";
+      case "paused":
+        return "bg-yellow-500/20 border-yellow-500/40 text-yellow-100";
+      case "completed":
+        return "bg-blue-500/20 border-blue-500/40 text-blue-100";
+      default:
+        return "bg-white/15 border-white/20 text-white/80";
     }
   };
 
@@ -110,25 +152,25 @@ const CampaignDetail = () => {
           <Link to="/campaigns" className="glass-button">
             ← Back
           </Link>
-          <span className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(campaign.status)}`}>
+          <span
+            className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(campaign.status)}`}
+          >
             {campaign.status}
           </span>
         </div>
         <h1 className="text-4xl font-bold text-white mb-2">{campaign.name}</h1>
-        {campaign.description && (
-          <p className="text-lg text-white/80">{campaign.description}</p>
-        )}
+        {campaign.description && <p className="text-lg text-white/80">{campaign.description}</p>}
       </div>
 
       {success && (
         <div className="mb-6">
-          <Alert type="success" message={success} onClose={() => setSuccess('')} duration={3000} />
+          <Alert type="success" message={success} onClose={() => setSuccess("")} duration={3000} />
         </div>
       )}
 
       {error && (
         <div className="mb-6">
-          <Alert type="error" message={error} onClose={() => setError('')} duration={5000} />
+          <Alert type="error" message={error} onClose={() => setError("")} duration={5000} />
         </div>
       )}
 
@@ -172,12 +214,12 @@ const CampaignDetail = () => {
                 <h3 className="text-sm font-medium text-white/60 mb-3">Connected Store</h3>
                 <div className="p-4 rounded-xl bg-white/5 border border-white/20">
                   <p className="text-white">
-                    {campaign.store ? campaign.store.shopDomain : 'All stores'}
+                    {campaign.store ? campaign.store.shopDomain : "All stores"}
                   </p>
                   <p className="text-xs text-white/60 mt-1">
                     {campaign.store
-                      ? 'Campaign is limited to this specific store'
-                      : 'Campaign runs across all connected stores'}
+                      ? "Campaign is limited to this specific store"
+                      : "Campaign runs across all connected stores"}
                   </p>
                 </div>
               </div>
@@ -189,13 +231,17 @@ const CampaignDetail = () => {
                   <div className="p-4 rounded-xl bg-white/5 border border-white/20">
                     <p className="text-xs text-white/60 mb-1">Start Date</p>
                     <p className="text-white font-medium">
-                      {campaign.startDate ? new Date(campaign.startDate).toLocaleDateString() : 'Immediate'}
+                      {campaign.startDate
+                        ? new Date(campaign.startDate).toLocaleDateString()
+                        : "Immediate"}
                     </p>
                   </div>
                   <div className="p-4 rounded-xl bg-white/5 border border-white/20">
                     <p className="text-xs text-white/60 mb-1">End Date</p>
                     <p className="text-white font-medium">
-                      {campaign.endDate ? new Date(campaign.endDate).toLocaleDateString() : 'Always-on'}
+                      {campaign.endDate
+                        ? new Date(campaign.endDate).toLocaleDateString()
+                        : "Always-on"}
                     </p>
                   </div>
                 </div>
@@ -208,7 +254,9 @@ const CampaignDetail = () => {
             <h2 className="text-2xl font-bold text-white mb-6">Performance</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30">
-                <p className="text-xs font-medium text-white/60 uppercase tracking-wide">Emails Sent</p>
+                <p className="text-xs font-medium text-white/60 uppercase tracking-wide">
+                  Emails Sent
+                </p>
                 <p className="text-3xl font-bold text-white mt-2">{campaign.emailsSent || 0}</p>
               </div>
               <div className="p-4 rounded-xl bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border border-yellow-500/30">
@@ -220,17 +268,23 @@ const CampaignDetail = () => {
                 <p className="text-3xl font-bold text-white mt-2">{campaign.emailsFailed || 0}</p>
               </div>
               <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30">
-                <p className="text-xs font-medium text-white/60 uppercase tracking-wide">Open Rate</p>
+                <p className="text-xs font-medium text-white/60 uppercase tracking-wide">
+                  Open Rate
+                </p>
                 <p className="text-3xl font-bold text-white mt-2">{campaign.openRate || 0}%</p>
               </div>
               <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
-                <p className="text-xs font-medium text-white/60 uppercase tracking-wide">Click Rate</p>
+                <p className="text-xs font-medium text-white/60 uppercase tracking-wide">
+                  Click Rate
+                </p>
                 <p className="text-3xl font-bold text-white mt-2">{campaign.clickRate || 0}%</p>
               </div>
               <div className="p-4 rounded-xl bg-gradient-to-br from-orange-400/20 to-pink-500/20 border border-orange-500/30">
                 <p className="text-xs font-medium text-white/60 uppercase tracking-wide">Total</p>
                 <p className="text-3xl font-bold text-white mt-2">
-                  {(campaign.emailsSent || 0) + (campaign.emailsPending || 0) + (campaign.emailsFailed || 0)}
+                  {(campaign.emailsSent || 0) +
+                    (campaign.emailsPending || 0) +
+                    (campaign.emailsFailed || 0)}
                 </p>
               </div>
             </div>
@@ -271,55 +325,60 @@ const CampaignDetail = () => {
           <div className="glass-card">
             <h3 className="text-xl font-bold text-white mb-4">Campaign Status</h3>
             <div className="flex flex-col gap-3">
-              {campaign.status === 'draft' && (
+              {campaign.status === "draft" && (
                 <button
-                  onClick={() => handleStatusChange('active')}
+                  type="button"
+                  onClick={() => handleStatusChange("active")}
                   disabled={statusLoading}
                   className="glass-button justify-center bg-green-500/20 border-green-500/40 hover:bg-green-500/30 disabled:opacity-50"
                 >
-                  {statusLoading ? 'Activating...' : '✅ Activate Campaign'}
+                  {statusLoading ? "Activating..." : "✅ Activate Campaign"}
                 </button>
               )}
 
-              {campaign.status === 'active' && (
+              {campaign.status === "active" && (
                 <>
                   <button
-                    onClick={() => handleStatusChange('paused')}
+                    type="button"
+                    onClick={() => handleStatusChange("paused")}
                     disabled={statusLoading}
                     className="glass-button justify-center bg-yellow-500/20 border-yellow-500/40 hover:bg-yellow-500/30 disabled:opacity-50"
                   >
-                    {statusLoading ? 'Pausing...' : '⏸️ Pause Campaign'}
+                    {statusLoading ? "Pausing..." : "⏸️ Pause Campaign"}
                   </button>
                   <button
-                    onClick={() => handleStatusChange('completed')}
+                    type="button"
+                    onClick={() => handleStatusChange("completed")}
                     disabled={statusLoading}
                     className="glass-button justify-center bg-blue-500/20 border-blue-500/40 hover:bg-blue-500/30 disabled:opacity-50"
                   >
-                    {statusLoading ? 'Completing...' : '✓ Mark Complete'}
+                    {statusLoading ? "Completing..." : "✓ Mark Complete"}
                   </button>
                 </>
               )}
 
-              {campaign.status === 'paused' && (
+              {campaign.status === "paused" && (
                 <>
                   <button
-                    onClick={() => handleStatusChange('active')}
+                    type="button"
+                    onClick={() => handleStatusChange("active")}
                     disabled={statusLoading}
                     className="glass-button justify-center bg-green-500/20 border-green-500/40 hover:bg-green-500/30 disabled:opacity-50"
                   >
-                    {statusLoading ? 'Resuming...' : '▶️ Resume Campaign'}
+                    {statusLoading ? "Resuming..." : "▶️ Resume Campaign"}
                   </button>
                   <button
-                    onClick={() => handleStatusChange('completed')}
+                    type="button"
+                    onClick={() => handleStatusChange("completed")}
                     disabled={statusLoading}
                     className="glass-button justify-center bg-blue-500/20 border-blue-500/40 hover:bg-blue-500/30 disabled:opacity-50"
                   >
-                    {statusLoading ? 'Completing...' : '✓ Mark Complete'}
+                    {statusLoading ? "Completing..." : "✓ Mark Complete"}
                   </button>
                 </>
               )}
 
-              {campaign.status === 'completed' && (
+              {campaign.status === "completed" && (
                 <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/30 text-center">
                   <p className="text-sm text-white/70">This campaign is complete</p>
                 </div>
@@ -347,7 +406,7 @@ const CampaignDetail = () => {
           <div className="glass-card">
             <h3 className="text-xl font-bold text-white mb-4">💡 Next Steps</h3>
             <ul className="space-y-3 text-sm text-white/70">
-              {campaign.status === 'draft' && (
+              {campaign.status === "draft" && (
                 <li className="flex items-start gap-2">
                   <span className="text-orange-400">•</span>
                   <span>Activate this campaign to start sending AI-generated emails</span>

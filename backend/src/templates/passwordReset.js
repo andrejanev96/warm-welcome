@@ -1,31 +1,31 @@
 const formatExpiry = (expiresAt) => {
   if (!expiresAt) {
-    return 'in one hour';
+    return "in one hour";
   }
 
-  return new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
   }).format(expiresAt);
 };
 
 export const buildPasswordResetEmail = ({ resetLink, expiresAt }) => {
-  const subject = 'Reset your WarmWelcome.ai password';
+  const subject = "Reset your WarmWelcome.ai password";
   const expiryLabel = formatExpiry(expiresAt);
 
   const text = [
-    'Hi there,',
-    '',
-    'We received a request to reset your WarmWelcome.ai password.',
+    "Hi there,",
+    "",
+    "We received a request to reset your WarmWelcome.ai password.",
     `Use the link below to choose a new password (the link expires ${expiryLabel}).`,
-    '',
+    "",
     resetLink,
-    '',
-    'If you did not request this change, you can safely ignore this email.',
-    '',
-    'Warm regards,',
-    'The WarmWelcome.ai Team',
-  ].join('\n');
+    "",
+    "If you did not request this change, you can safely ignore this email.",
+    "",
+    "Warm regards,",
+    "The WarmWelcome.ai Team",
+  ].join("\n");
 
   const html = `<!DOCTYPE html>
 <html lang="en">

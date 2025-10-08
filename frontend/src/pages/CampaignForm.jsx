@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import Layout from '../components/Layout';
-import Alert from '../components/Alert';
-import CelebrationOverlay from '../components/animations/CelebrationOverlay.jsx';
-import EnvelopeAnimation from '../components/animations/EnvelopeAnimation.jsx';
-import api from '../utils/api';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import Layout from "../components/Layout";
+import Alert from "../components/Alert";
+import CelebrationOverlay from "../components/animations/CelebrationOverlay.jsx";
+import EnvelopeAnimation from "../components/animations/EnvelopeAnimation.jsx";
+import api from "../utils/api";
 
 const CampaignForm = () => {
   const { id } = useParams();
@@ -12,24 +12,24 @@ const CampaignForm = () => {
   const isEdit = !!id;
 
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    goal: 'welcome',
-    storeId: '',
-    blueprintId: '',
-    triggerType: 'user_signup',
-    startDate: '',
-    endDate: '',
+    name: "",
+    description: "",
+    goal: "welcome",
+    storeId: "",
+    blueprintId: "",
+    triggerType: "user_signup",
+    startDate: "",
+    endDate: "",
   });
   const [stores, setStores] = useState([]);
   const [blueprints, setBlueprints] = useState([]);
   const [selectedBlueprint, setSelectedBlueprint] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [showCelebration, setShowCelebration] = useState(false);
-  const [celebrationContent, setCelebrationContent] = useState({ title: '', message: '' });
+  const [celebrationContent, setCelebrationContent] = useState({ title: "", message: "" });
   const celebrationTimeoutRef = useRef(null);
 
   useEffect(() => {
@@ -43,38 +43,98 @@ const CampaignForm = () => {
   const isFormValid = Boolean(formData.name.trim() && formData.goal && formData.triggerType);
 
   const goals = [
-    { value: 'welcome', label: 'Welcome New Customers', icon: '👋', description: 'Make a warm first impression' },
-    { value: 're-engage', label: 'Re-engage Inactive', icon: '💤', description: 'Win back dormant customers' },
-    { value: 'upsell', label: 'Upsell & Cross-sell', icon: '🚀', description: 'Suggest complementary products' },
-    { value: 'milestone', label: 'Celebrate Milestones', icon: '🎉', description: 'Acknowledge customer achievements' },
-    { value: 'nurture', label: 'Nurture Leads', icon: '🌱', description: 'Build relationships over time' },
-    { value: 'feedback', label: 'Request Feedback', icon: '💬', description: 'Gather customer insights' },
+    {
+      value: "welcome",
+      label: "Welcome New Customers",
+      icon: "👋",
+      description: "Make a warm first impression",
+    },
+    {
+      value: "re-engage",
+      label: "Re-engage Inactive",
+      icon: "💤",
+      description: "Win back dormant customers",
+    },
+    {
+      value: "upsell",
+      label: "Upsell & Cross-sell",
+      icon: "🚀",
+      description: "Suggest complementary products",
+    },
+    {
+      value: "milestone",
+      label: "Celebrate Milestones",
+      icon: "🎉",
+      description: "Acknowledge customer achievements",
+    },
+    {
+      value: "nurture",
+      label: "Nurture Leads",
+      icon: "🌱",
+      description: "Build relationships over time",
+    },
+    {
+      value: "feedback",
+      label: "Request Feedback",
+      icon: "💬",
+      description: "Gather customer insights",
+    },
   ];
 
   const triggerTypes = [
-    { value: 'user_signup', label: 'User Signup', icon: '👋', description: 'When a new user creates an account' },
-    { value: 'first_purchase', label: 'First Purchase', icon: '🛍️', description: "After customer's first purchase" },
-    { value: 'abandoned_cart', label: 'Abandoned Cart', icon: '🛒', description: 'When cart is abandoned for 24h' },
-    { value: 'post_purchase', label: 'Post Purchase', icon: '📦', description: 'After a purchase is completed' },
-    { value: 'no_activity', label: 'No Activity', icon: '💤', description: 'After 30 days of inactivity' },
-    { value: 'high_value', label: 'High Value Reached', icon: '⭐', description: 'When customer reaches spending threshold' },
+    {
+      value: "user_signup",
+      label: "User Signup",
+      icon: "👋",
+      description: "When a new user creates an account",
+    },
+    {
+      value: "first_purchase",
+      label: "First Purchase",
+      icon: "🛍️",
+      description: "After customer's first purchase",
+    },
+    {
+      value: "abandoned_cart",
+      label: "Abandoned Cart",
+      icon: "🛒",
+      description: "When cart is abandoned for 24h",
+    },
+    {
+      value: "post_purchase",
+      label: "Post Purchase",
+      icon: "📦",
+      description: "After a purchase is completed",
+    },
+    {
+      value: "no_activity",
+      label: "No Activity",
+      icon: "💤",
+      description: "After 30 days of inactivity",
+    },
+    {
+      value: "high_value",
+      label: "High Value Reached",
+      icon: "⭐",
+      description: "When customer reaches spending threshold",
+    },
   ];
 
   const fetchStores = useCallback(async () => {
     try {
-      const response = await api.get('/shopify/stores');
+      const response = await api.get("/shopify/stores");
       setStores(response.data.data || []);
     } catch (err) {
-      console.error('Failed to load stores:', err);
+      console.error("Failed to load stores:", err);
     }
   }, []);
 
   const fetchBlueprints = useCallback(async () => {
     try {
-      const response = await api.get('/blueprints');
+      const response = await api.get("/blueprints");
       setBlueprints(response.data.data || []);
     } catch (err) {
-      console.error('Failed to load blueprints:', err);
+      console.error("Failed to load blueprints:", err);
     }
   }, []);
 
@@ -85,19 +145,19 @@ const CampaignForm = () => {
       const campaign = response.data.data;
       setFormData({
         name: campaign.name,
-        description: campaign.description || '',
-        goal: campaign.goal || 'welcome',
-        storeId: campaign.store?.id || '',
-        blueprintId: campaign.blueprint?.id || '',
-        triggerType: campaign.triggers?.[0]?.type || 'user_signup',
-        startDate: campaign.startDate ? campaign.startDate.split('T')[0] : '',
-        endDate: campaign.endDate ? campaign.endDate.split('T')[0] : '',
+        description: campaign.description || "",
+        goal: campaign.goal || "welcome",
+        storeId: campaign.store?.id || "",
+        blueprintId: campaign.blueprint?.id || "",
+        triggerType: campaign.triggers?.[0]?.type || "user_signup",
+        startDate: campaign.startDate ? campaign.startDate.split("T")[0] : "",
+        endDate: campaign.endDate ? campaign.endDate.split("T")[0] : "",
       });
       if (campaign.blueprint) {
         setSelectedBlueprint(campaign.blueprint);
       }
     } catch (err) {
-      setError('Failed to load campaign');
+      setError("Failed to load campaign");
       console.error(err);
     } finally {
       setLoadingData(false);
@@ -122,12 +182,12 @@ const CampaignForm = () => {
     setFormData({ ...formData, [name]: value });
 
     // Update selected blueprint when blueprintId changes
-    if (name === 'blueprintId') {
-      const blueprint = blueprints.find(b => b.id === value);
+    if (name === "blueprintId") {
+      const blueprint = blueprints.find((b) => b.id === value);
       setSelectedBlueprint(blueprint || null);
     }
 
-    if (error) setError('');
+    if (error) setError("");
   };
 
   const handleSubmit = async (e) => {
@@ -138,11 +198,11 @@ const CampaignForm = () => {
     }
 
     setLoading(true);
-    setError('');
+    setError("");
     setShowCelebration(false);
     setCelebrationContent({
-      title: isEdit ? 'Updating campaign... ✏️' : 'Creating campaign... ✨',
-      message: 'Brewing personalized journeys for your customers.',
+      title: isEdit ? "Updating campaign... ✏️" : "Creating campaign... ✨",
+      message: "Brewing personalized journeys for your customers.",
     });
 
     try {
@@ -159,17 +219,17 @@ const CampaignForm = () => {
 
       if (isEdit) {
         await api.put(`/campaigns/${id}`, payload);
-        setSuccess('Campaign updated successfully!');
+        setSuccess("Campaign updated successfully!");
         setCelebrationContent({
-          title: 'Campaign refreshed! 🔁',
-          message: 'Taking you back to your campaign list.',
+          title: "Campaign refreshed! 🔁",
+          message: "Taking you back to your campaign list.",
         });
       } else {
-        await api.post('/campaigns', payload);
-        setSuccess('Campaign created successfully!');
+        await api.post("/campaigns", payload);
+        setSuccess("Campaign created successfully!");
         setCelebrationContent({
-          title: 'Campaign ready! 🎉',
-          message: 'Launching those warm welcomes now.',
+          title: "Campaign ready! 🎉",
+          message: "Launching those warm welcomes now.",
         });
       }
 
@@ -178,11 +238,11 @@ const CampaignForm = () => {
       }
       setShowCelebration(true);
       celebrationTimeoutRef.current = setTimeout(() => {
-        navigate('/campaigns');
+        navigate("/campaigns");
       }, 1700);
     } catch (err) {
-      setError(err.response?.data?.message || `Failed to ${isEdit ? 'update' : 'create'} campaign`);
-      console.error('Failed to save campaign', err);
+      setError(err.response?.data?.message || `Failed to ${isEdit ? "update" : "create"} campaign`);
+      console.error("Failed to save campaign", err);
       setShowCelebration(false);
       setLoading(false);
     }
@@ -192,7 +252,7 @@ const CampaignForm = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
         </div>
       </Layout>
     );
@@ -202,24 +262,24 @@ const CampaignForm = () => {
     <Layout>
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-white mb-2">
-          {isEdit ? 'Edit Campaign' : 'Create New Campaign'}
+          {isEdit ? "Edit Campaign" : "Create New Campaign"}
         </h1>
         <p className="text-lg text-white/80">
           {isEdit
-            ? 'Update your AI-powered email campaign'
-            : 'Set up triggers and let AI generate unique emails for each customer'}
+            ? "Update your AI-powered email campaign"
+            : "Set up triggers and let AI generate unique emails for each customer"}
         </p>
       </div>
 
       {success && (
         <div className="mb-6">
-          <Alert type="success" message={success} onClose={() => setSuccess('')} duration={3000} />
+          <Alert type="success" message={success} onClose={() => setSuccess("")} duration={3000} />
         </div>
       )}
 
       {error && (
         <div className="mb-6">
-          <Alert type="error" message={error} onClose={() => setError('')} duration={5000} />
+          <Alert type="error" message={error} onClose={() => setError("")} duration={5000} />
         </div>
       )}
 
@@ -275,8 +335,8 @@ const CampaignForm = () => {
                   key={goal.value}
                   className={`relative flex items-start gap-3 rounded-xl p-4 transition-all border cursor-pointer ${
                     isSelected
-                      ? 'bg-white/20 border-orange-400 shadow-lg'
-                      : 'bg-white/5 border-white/20 hover:bg-white/10'
+                      ? "bg-white/20 border-orange-400 shadow-lg"
+                      : "bg-white/5 border-white/20 hover:bg-white/10"
                   }`}
                 >
                   <input
@@ -320,7 +380,7 @@ const CampaignForm = () => {
             <option value="">No blueprint (AI will generate freely)</option>
             {blueprints.map((blueprint) => (
               <option key={blueprint.id} value={blueprint.id}>
-                {blueprint.name} {blueprint.category ? `(${blueprint.category})` : ''}
+                {blueprint.name} {blueprint.category ? `(${blueprint.category})` : ""}
               </option>
             ))}
           </select>
@@ -329,15 +389,17 @@ const CampaignForm = () => {
             <div className="mt-4 p-4 bg-white/5 border border-white/10 rounded-lg space-y-3">
               <div>
                 <p className="text-xs text-white/60 mb-1">Subject Pattern:</p>
-                <p className="text-sm text-white/90 font-mono">{selectedBlueprint.subjectPattern}</p>
+                <p className="text-sm text-white/90 font-mono">
+                  {selectedBlueprint.subjectPattern}
+                </p>
               </div>
               {selectedBlueprint.variables && selectedBlueprint.variables.length > 0 && (
                 <div>
                   <p className="text-xs text-white/60 mb-2">Required Variables:</p>
                   <div className="flex flex-wrap gap-2">
-                    {selectedBlueprint.variables.map((variable, idx) => (
+                    {selectedBlueprint.variables.map((variable) => (
                       <span
-                        key={idx}
+                        key={`required-${variable}`}
                         className="px-2 py-1 text-xs rounded bg-orange-500/20 border border-orange-400/30 text-orange-100 font-mono"
                       >
                         {variable}
@@ -350,9 +412,9 @@ const CampaignForm = () => {
                 <div>
                   <p className="text-xs text-white/60 mb-2">Optional Variables:</p>
                   <div className="flex flex-wrap gap-2">
-                    {selectedBlueprint.optionalVars.map((variable, idx) => (
+                    {selectedBlueprint.optionalVars.map((variable) => (
                       <span
-                        key={idx}
+                        key={`optional-${variable}`}
                         className="px-2 py-1 text-xs rounded bg-white/10 border border-white/20 text-white/70 font-mono"
                       >
                         {variable}
@@ -384,7 +446,7 @@ const CampaignForm = () => {
             >
               <option value="">All stores</option>
               {stores
-                .filter(store => store.isActive)
+                .filter((store) => store.isActive)
                 .map((store) => (
                   <option key={store.id} value={store.id}>
                     {store.shopDomain}
@@ -410,8 +472,8 @@ const CampaignForm = () => {
                   key={trigger.value}
                   className={`relative flex items-start gap-3 rounded-xl p-4 transition-all border cursor-pointer ${
                     isSelected
-                      ? 'bg-white/20 border-orange-400 shadow-lg'
-                      : 'bg-white/5 border-white/20 hover:bg-white/10'
+                      ? "bg-white/20 border-orange-400 shadow-lg"
+                      : "bg-white/5 border-white/20 hover:bg-white/10"
                   }`}
                 >
                   <input
@@ -486,7 +548,8 @@ const CampaignForm = () => {
             <div>
               <h3 className="text-xl font-bold text-white mb-2">AI-Powered Personalization</h3>
               <p className="text-sm text-white/70">
-                Once activated, AI will generate unique, personalized emails for each recipient based on:
+                Once activated, AI will generate unique, personalized emails for each recipient
+                based on:
               </p>
               <ul className="mt-3 space-y-2 text-sm text-white/70">
                 <li className="flex items-start gap-2">
@@ -521,11 +584,15 @@ const CampaignForm = () => {
                 <EnvelopeAnimation size="sm" />
                 <span className="font-medium">Saving magic...</span>
               </span>
-            ) : isEdit ? 'Update Campaign' : 'Create Campaign'}
+            ) : isEdit ? (
+              "Update Campaign"
+            ) : (
+              "Create Campaign"
+            )}
           </button>
           <button
             type="button"
-            onClick={() => navigate('/campaigns')}
+            onClick={() => navigate("/campaigns")}
             className="glass-button justify-center"
           >
             Cancel

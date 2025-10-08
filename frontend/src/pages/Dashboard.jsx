@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import Layout from '../components/Layout';
-import OnboardingChecklist from '../components/OnboardingChecklist';
-import api from '../utils/api';
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import Layout from "../components/Layout";
+import OnboardingChecklist from "../components/OnboardingChecklist";
+import api from "../utils/api";
 
 const MAX_ACTIVITY_ITEMS = 8;
 
@@ -22,15 +22,15 @@ const Dashboard = () => {
   const [stats, setStats] = useState(initialStats);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const loadDashboardData = async () => {
       setLoading(true);
-      setError('');
+      setError("");
 
       try {
-        const campaignResponse = await api.get('/campaigns');
+        const campaignResponse = await api.get("/campaigns");
         const campaigns = Array.isArray(campaignResponse.data?.data)
           ? campaignResponse.data.data
           : [];
@@ -39,7 +39,7 @@ const Dashboard = () => {
           (acc, campaign) => {
             const sent = campaign.emailsSent || 0;
             acc.totalCampaigns += 1;
-            if (campaign.status === 'active') {
+            if (campaign.status === "active") {
               acc.activeCampaigns += 1;
             }
             acc.emailsSent += sent;
@@ -57,15 +57,11 @@ const Dashboard = () => {
             emailsFailed: 0,
             openWeighted: 0,
             clickWeighted: 0,
-          }
+          },
         );
 
-        const openRate = aggregate.emailsSent
-          ? aggregate.openWeighted / aggregate.emailsSent
-          : 0;
-        const clickRate = aggregate.emailsSent
-          ? aggregate.clickWeighted / aggregate.emailsSent
-          : 0;
+        const openRate = aggregate.emailsSent ? aggregate.openWeighted / aggregate.emailsSent : 0;
+        const clickRate = aggregate.emailsSent ? aggregate.clickWeighted / aggregate.emailsSent : 0;
 
         setStats({
           totalCampaigns: aggregate.totalCampaigns,
@@ -84,10 +80,10 @@ const Dashboard = () => {
             if (campaign.createdAt) {
               events.push({
                 id: `${campaign.id}-created`,
-                icon: '🆕',
+                icon: "🆕",
                 title: campaign.name,
                 campaignId: campaign.id,
-                message: 'Campaign created',
+                message: "Campaign created",
                 timestamp: campaign.createdAt,
               });
             }
@@ -95,7 +91,8 @@ const Dashboard = () => {
             if (campaign.updatedAt && campaign.updatedAt !== campaign.createdAt) {
               events.push({
                 id: `${campaign.id}-status`,
-                icon: campaign.status === 'active' ? '✅' : campaign.status === 'paused' ? '⏸️' : '📁',
+                icon:
+                  campaign.status === "active" ? "✅" : campaign.status === "paused" ? "⏸️" : "📁",
                 title: campaign.name,
                 campaignId: campaign.id,
                 message: `Status: ${campaign.status}`,
@@ -108,10 +105,10 @@ const Dashboard = () => {
                 if (email.clickedAt) {
                   return {
                     id: `${email.id}-clicked`,
-                    icon: '🖱️',
+                    icon: "🖱️",
                     title: campaign.name,
                     campaignId: campaign.id,
-                    message: 'Email clicked',
+                    message: "Email clicked",
                     timestamp: email.clickedAt,
                   };
                 }
@@ -119,32 +116,32 @@ const Dashboard = () => {
                 if (email.openedAt) {
                   return {
                     id: `${email.id}-opened`,
-                    icon: '👀',
+                    icon: "👀",
                     title: campaign.name,
                     campaignId: campaign.id,
-                    message: 'Email opened',
+                    message: "Email opened",
                     timestamp: email.openedAt,
                   };
                 }
 
-                if (email.status === 'sent') {
+                if (email.status === "sent") {
                   return {
                     id: `${email.id}-sent`,
-                    icon: '📬',
+                    icon: "📬",
                     title: campaign.name,
                     campaignId: campaign.id,
-                    message: 'Email sent',
+                    message: "Email sent",
                     timestamp: email.sentAt || campaign.updatedAt || campaign.createdAt,
                   };
                 }
 
-                if (email.status === 'failed') {
+                if (email.status === "failed") {
                   return {
                     id: `${email.id}-failed`,
-                    icon: '⚠️',
+                    icon: "⚠️",
                     title: campaign.name,
                     campaignId: campaign.id,
-                    message: 'Email failed to send',
+                    message: "Email failed to send",
                     timestamp: email.updatedAt || campaign.updatedAt || campaign.createdAt,
                   };
                 }
@@ -161,8 +158,8 @@ const Dashboard = () => {
 
         setRecentActivity(activity);
       } catch (err) {
-        console.error('Failed to load dashboard stats', err);
-        setError('We could not load your campaign stats right now.');
+        console.error("Failed to load dashboard stats", err);
+        setError("We could not load your campaign stats right now.");
         setStats(initialStats);
         setRecentActivity([]);
       } finally {
@@ -178,19 +175,21 @@ const Dashboard = () => {
   const formatDateTime = useMemo(
     () =>
       new Intl.DateTimeFormat(undefined, {
-        dateStyle: 'medium',
-        timeStyle: 'short',
+        dateStyle: "medium",
+        timeStyle: "short",
       }),
-    []
+    [],
   );
 
   return (
     <Layout>
       <div className="mb-8 text-center">
         <h2 className="text-4xl font-bold text-white mb-2">
-          Welcome back{user?.firstName ? `, ${user.firstName}` : ''}! 👋
+          Welcome back{user?.firstName ? `, ${user.firstName}` : ""}! 👋
         </h2>
-        <p className="text-lg text-white/80">Let's create some warm, personalized onboarding emails.</p>
+        <p className="text-lg text-white/80">
+          Let's create some warm, personalized onboarding emails.
+        </p>
       </div>
 
       {error && (
@@ -205,17 +204,29 @@ const Dashboard = () => {
             <div className="glass-card hover:scale-105 transition-transform">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-orange-400 to-pink-500 shadow-lg">
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  <svg
+                    aria-hidden="true"
+                    focusable="false"
+                    className="w-7 h-7 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
                   </svg>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-white/70">Total Campaigns</p>
                   <p className="text-4xl font-bold text-white mt-1">
-                    {loading ? '—' : formatNumber(stats.totalCampaigns)}
+                    {loading ? "—" : formatNumber(stats.totalCampaigns)}
                   </p>
                   <p className="text-xs text-white/60 mt-1">
-                    Active: {loading ? '—' : formatNumber(stats.activeCampaigns)}
+                    Active: {loading ? "—" : formatNumber(stats.activeCampaigns)}
                   </p>
                 </div>
               </div>
@@ -224,18 +235,30 @@ const Dashboard = () => {
             <div className="glass-card hover:scale-105 transition-transform">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg">
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    aria-hidden="true"
+                    focusable="false"
+                    className="w-7 h-7 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-white/70">Emails Sent</p>
                   <p className="text-4xl font-bold text-white mt-1">
-                    {loading ? '—' : formatNumber(stats.emailsSent)}
+                    {loading ? "—" : formatNumber(stats.emailsSent)}
                   </p>
                   <p className="text-xs text-white/60 mt-1">
-                    Pending: {loading ? '—' : formatNumber(stats.emailsPending)} • Failed:{' '}
-                    {loading ? '—' : formatNumber(stats.emailsFailed)}
+                    Pending: {loading ? "—" : formatNumber(stats.emailsPending)} • Failed:{" "}
+                    {loading ? "—" : formatNumber(stats.emailsFailed)}
                   </p>
                 </div>
               </div>
@@ -244,17 +267,29 @@ const Dashboard = () => {
             <div className="glass-card hover:scale-105 transition-transform">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-400 to-purple-500 shadow-lg">
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  <svg
+                    aria-hidden="true"
+                    focusable="false"
+                    className="w-7 h-7 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                    />
                   </svg>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-white/70">Open Rate</p>
                   <p className="text-4xl font-bold text-white mt-1">
-                    {loading ? '—' : formatPercent(stats.openRate)}
+                    {loading ? "—" : formatPercent(stats.openRate)}
                   </p>
                   <p className="text-xs text-white/60 mt-1">
-                    Click rate: {loading ? '—' : formatPercent(stats.clickRate)}
+                    Click rate: {loading ? "—" : formatPercent(stats.clickRate)}
                   </p>
                 </div>
               </div>
@@ -266,15 +301,24 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-2xl font-bold text-white mb-2">👥 Customers</h3>
-                  <p className="text-white/70">View insights and AI-suggested outreach opportunities</p>
+                  <p className="text-white/70">
+                    View insights and AI-suggested outreach opportunities
+                  </p>
                 </div>
                 <svg
+                  aria-hidden="true"
+                  focusable="false"
                   className="w-8 h-8 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </div>
             </Link>
@@ -286,12 +330,19 @@ const Dashboard = () => {
                   <p className="text-white/70">Set up AI-powered email campaigns</p>
                 </div>
                 <svg
+                  aria-hidden="true"
+                  focusable="false"
                   className="w-8 h-8 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
                 </svg>
               </div>
             </Link>
@@ -304,13 +355,15 @@ const Dashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-2xl font-bold text-white">🗞️ Recent Activity</h3>
-              <p className="text-sm text-white/70">Latest moments across your campaigns and emails</p>
+              <p className="text-sm text-white/70">
+                Latest moments across your campaigns and emails
+              </p>
             </div>
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white/70"></div>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white/70" />
             </div>
           ) : recentActivity.length === 0 ? (
             <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-white/70">

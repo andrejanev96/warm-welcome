@@ -3,7 +3,7 @@
  * In production, only errors are logged
  */
 
-const isDevelopment = process.env.NODE_ENV !== 'production';
+const isDevelopment = process.env.NODE_ENV !== "production";
 
 export const logger = {
   /**
@@ -11,7 +11,7 @@ export const logger = {
    */
   info: (...args) => {
     if (isDevelopment) {
-      console.log('[INFO]', ...args);
+      console.log("[INFO]", ...args);
     }
   },
 
@@ -20,7 +20,7 @@ export const logger = {
    */
   warn: (...args) => {
     if (isDevelopment) {
-      console.warn('[WARN]', ...args);
+      console.warn("[WARN]", ...args);
     }
   },
 
@@ -29,11 +29,11 @@ export const logger = {
    */
   error: (...args) => {
     if (isDevelopment) {
-      console.error('[ERROR]', ...args);
+      console.error("[ERROR]", ...args);
     } else {
       // In production, log errors but without sensitive details
       // You should integrate with a proper logging service (e.g., Sentry, LogRocket)
-      console.error('[ERROR]', args[0]); // Only log the error message, not full details
+      console.error("[ERROR]", args[0]); // Only log the error message, not full details
     }
   },
 
@@ -42,7 +42,7 @@ export const logger = {
    */
   debug: (...args) => {
     if (isDevelopment) {
-      console.log('[DEBUG]', ...args);
+      console.log("[DEBUG]", ...args);
     }
   },
 };

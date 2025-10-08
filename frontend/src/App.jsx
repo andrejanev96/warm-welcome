@@ -1,19 +1,19 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import Dashboard from './pages/Dashboard';
-import BrandVoice from './pages/BrandVoice';
-import Customers from './pages/Customers';
-import Campaigns from './pages/Campaigns';
-import CampaignForm from './pages/CampaignForm';
-import CampaignDetail from './pages/CampaignDetail';
-import Blueprints from './pages/Blueprints';
-import BlueprintForm from './pages/BlueprintForm';
-import Integrations from './pages/Integrations';
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import Dashboard from "./pages/Dashboard";
+import BrandVoice from "./pages/BrandVoice";
+import Customers from "./pages/Customers";
+import Campaigns from "./pages/Campaigns";
+import CampaignForm from "./pages/CampaignForm";
+import CampaignDetail from "./pages/CampaignDetail";
+import Blueprints from "./pages/Blueprints";
+import BlueprintForm from "./pages/BlueprintForm";
+import Integrations from "./pages/Integrations";
 
 function App() {
   return (

@@ -1,15 +1,15 @@
 const sizeClassMap = {
-  sm: 'envelope-animation--sm',
-  md: 'envelope-animation--md',
-  lg: 'envelope-animation--lg',
+  sm: "envelope-animation--sm",
+  md: "envelope-animation--md",
+  lg: "envelope-animation--lg",
 };
 
-const EnvelopeAnimation = ({ size = 'md', variant = 'loop', className = '' }) => {
+const EnvelopeAnimation = ({ size = "md", variant = "loop", className = "" }) => {
   const sizeClass = sizeClassMap[size] || sizeClassMap.md;
-  const variantClass = variant === 'celebration' ? 'envelope-animation--celebration' : '';
-  const classes = ['envelope-animation', sizeClass, variantClass, className]
+  const variantClass = variant === "celebration" ? "envelope-animation--celebration" : "";
+  const classes = ["envelope-animation", sizeClass, variantClass, className]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 
   return (
     <div className={classes} aria-hidden="true">

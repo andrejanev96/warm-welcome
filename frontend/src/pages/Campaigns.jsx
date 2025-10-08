@@ -1,53 +1,53 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import Layout from '../components/Layout';
-import ConfirmDialog from '../components/ConfirmDialog.jsx';
-import api from '../utils/api';
+import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
+import Layout from "../components/Layout";
+import ConfirmDialog from "../components/ConfirmDialog.jsx";
+import api from "../utils/api";
 
 const Campaigns = () => {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
-  const [error, setError] = useState('');
+  const [filter, setFilter] = useState("all");
+  const [error, setError] = useState("");
   const [deleteDialog, setDeleteDialog] = useState({ open: false, campaign: null, loading: false });
 
   const statusFilters = [
-    { value: 'all', label: 'All Campaigns', icon: '📊' },
-    { value: 'draft', label: 'Draft', icon: '📝' },
-    { value: 'active', label: 'Active', icon: '▶️' },
-    { value: 'paused', label: 'Paused', icon: '⏸️' },
-    { value: 'completed', label: 'Completed', icon: '✅' },
+    { value: "all", label: "All Campaigns", icon: "📊" },
+    { value: "draft", label: "Draft", icon: "📝" },
+    { value: "active", label: "Active", icon: "▶️" },
+    { value: "paused", label: "Paused", icon: "⏸️" },
+    { value: "completed", label: "Completed", icon: "✅" },
   ];
 
   const goals = {
-    welcome: { icon: '👋', label: 'Welcome' },
-    're-engage': { icon: '💤', label: 'Re-engage' },
-    upsell: { icon: '🚀', label: 'Upsell' },
-    milestone: { icon: '🎉', label: 'Milestone' },
-    nurture: { icon: '🌱', label: 'Nurture' },
-    feedback: { icon: '💬', label: 'Feedback' },
+    welcome: { icon: "👋", label: "Welcome" },
+    "re-engage": { icon: "💤", label: "Re-engage" },
+    upsell: { icon: "🚀", label: "Upsell" },
+    milestone: { icon: "🎉", label: "Milestone" },
+    nurture: { icon: "🌱", label: "Nurture" },
+    feedback: { icon: "💬", label: "Feedback" },
   };
 
   const triggers = {
-    user_signup: { icon: '👋', label: 'User Signup' },
-    first_purchase: { icon: '🛍️', label: 'First Purchase' },
-    abandoned_cart: { icon: '🛒', label: 'Abandoned Cart' },
-    post_purchase: { icon: '📦', label: 'Post Purchase' },
-    no_activity: { icon: '💤', label: 'No Activity' },
-    high_value: { icon: '⭐', label: 'High Value' },
+    user_signup: { icon: "👋", label: "User Signup" },
+    first_purchase: { icon: "🛍️", label: "First Purchase" },
+    abandoned_cart: { icon: "🛒", label: "Abandoned Cart" },
+    post_purchase: { icon: "📦", label: "Post Purchase" },
+    no_activity: { icon: "💤", label: "No Activity" },
+    high_value: { icon: "⭐", label: "High Value" },
   };
 
   const fetchCampaigns = useCallback(async () => {
     try {
       setLoading(true);
-      const params = filter === 'all' ? {} : { status: filter };
-      const response = await api.get('/campaigns', { params });
+      const params = filter === "all" ? {} : { status: filter };
+      const response = await api.get("/campaigns", { params });
 
       setCampaigns(response.data.data);
-      setError('');
+      setError("");
     } catch (err) {
-      setError('Failed to load campaigns');
-      console.error('Failed to load campaigns', err);
+      setError("Failed to load campaigns");
+      console.error("Failed to load campaigns", err);
     } finally {
       setLoading(false);
     }
@@ -62,8 +62,8 @@ const Campaigns = () => {
       await api.patch(`/campaigns/${id}/status`, { status: newStatus });
       fetchCampaigns();
     } catch (err) {
-      setError('Failed to update campaign status');
-      console.error('Failed to update campaign status', err);
+      setError("Failed to update campaign status");
+      console.error("Failed to update campaign status", err);
     }
   };
 
@@ -72,7 +72,9 @@ const Campaigns = () => {
   };
 
   const closeDeleteDialog = () => {
-    setDeleteDialog((prev) => (prev.loading ? prev : { open: false, campaign: null, loading: false }));
+    setDeleteDialog((prev) =>
+      prev.loading ? prev : { open: false, campaign: null, loading: false },
+    );
   };
 
   const handleDelete = async () => {
@@ -89,22 +91,44 @@ const Campaigns = () => {
       fetchCampaigns();
     } catch (err) {
       setDeleteDialog((prev) => ({ ...prev, loading: false }));
-      setError(err.response?.data?.message || 'Failed to delete campaign');
-      console.error('Failed to delete campaign', err);
+      setError(err.response?.data?.message || "Failed to delete campaign");
+      console.error("Failed to delete campaign", err);
     }
   };
 
   const getStatusBadge = (status) => {
     const config = {
-      draft: { text: 'text-white/80', bg: 'bg-white/15', border: 'border-white/20', label: 'Draft' },
-      active: { text: 'text-emerald-50', bg: 'bg-emerald-500/30', border: 'border-emerald-300/40', label: 'Active' },
-      paused: { text: 'text-yellow-50', bg: 'bg-yellow-500/30', border: 'border-yellow-300/40', label: 'Paused' },
-      completed: { text: 'text-cyan-50', bg: 'bg-cyan-500/30', border: 'border-cyan-300/40', label: 'Completed' },
+      draft: {
+        text: "text-white/80",
+        bg: "bg-white/15",
+        border: "border-white/20",
+        label: "Draft",
+      },
+      active: {
+        text: "text-emerald-50",
+        bg: "bg-emerald-500/30",
+        border: "border-emerald-300/40",
+        label: "Active",
+      },
+      paused: {
+        text: "text-yellow-50",
+        bg: "bg-yellow-500/30",
+        border: "border-yellow-300/40",
+        label: "Paused",
+      },
+      completed: {
+        text: "text-cyan-50",
+        bg: "bg-cyan-500/30",
+        border: "border-cyan-300/40",
+        label: "Completed",
+      },
     };
 
     const styles = config[status] || config.draft;
     return (
-      <span className={`px-3 py-1 text-xs rounded-full border ${styles.bg} ${styles.text} ${styles.border}`}>
+      <span
+        className={`px-3 py-1 text-xs rounded-full border ${styles.bg} ${styles.text} ${styles.border}`}
+      >
         {styles.label}
       </span>
     );
@@ -120,10 +144,7 @@ const Campaigns = () => {
             Automate warm touchpoints across the entire customer journey
           </p>
         </div>
-        <Link
-          to="/campaigns/new"
-          className="glass-button"
-        >
+        <Link to="/campaigns/new" className="glass-button">
           <span className="text-xl">+</span>
           New Campaign
         </Link>
@@ -135,12 +156,13 @@ const Campaigns = () => {
         <div className="flex flex-wrap gap-2 mb-8">
           {statusFilters.map((statusFilter) => (
             <button
+              type="button"
               key={statusFilter.value}
               onClick={() => setFilter(statusFilter.value)}
               className={`glass-button px-4 py-2 ${
                 filter === statusFilter.value
-                  ? 'bg-white/25 border border-white/40'
-                  : 'bg-white/10 hover:bg-white/20'
+                  ? "bg-white/25 border border-white/40"
+                  : "bg-white/10 hover:bg-white/20"
               }`}
             >
               <span className="mr-2">{statusFilter.icon}</span>
@@ -159,7 +181,7 @@ const Campaigns = () => {
         {/* Loading State */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
           </div>
         ) : campaigns.length === 0 ? (
           /* Empty State */
@@ -167,8 +189,8 @@ const Campaigns = () => {
             <div className="text-6xl mb-4">🚀</div>
             <h3 className="text-xl font-semibold text-white mb-2">No campaigns yet</h3>
             <p className="text-white/70 mb-4">
-              {filter === 'all'
-                ? 'Set up your first journey to greet customers the moment they need it.'
+              {filter === "all"
+                ? "Set up your first journey to greet customers the moment they need it."
                 : `No ${filter} campaigns right now.`}
             </p>
             <Link to="/campaigns/new" className="glass-button inline-flex">
@@ -244,7 +266,9 @@ const Campaigns = () => {
                       {(campaign.openRate > 0 || campaign.clickRate > 0) && (
                         <div className="flex items-center gap-2">
                           <span>📊</span>
-                          <span>{campaign.openRate}% open • {campaign.clickRate}% click</span>
+                          <span>
+                            {campaign.openRate}% open • {campaign.clickRate}% click
+                          </span>
                         </div>
                       )}
                     </div>
@@ -252,41 +276,42 @@ const Campaigns = () => {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {campaign.status === 'draft' && (
+                    {campaign.status === "draft" && (
                       <button
-                        onClick={() => handleStatusChange(campaign.id, 'active')}
+                        type="button"
+                        onClick={() => handleStatusChange(campaign.id, "active")}
                         className="glass-button bg-emerald-500/30 hover:bg-emerald-500/40"
                         title="Activate campaign"
                       >
                         ✅ Activate
                       </button>
                     )}
-                    {campaign.status === 'paused' && (
+                    {campaign.status === "paused" && (
                       <button
-                        onClick={() => handleStatusChange(campaign.id, 'active')}
+                        type="button"
+                        onClick={() => handleStatusChange(campaign.id, "active")}
                         className="glass-button bg-emerald-500/30 hover:bg-emerald-500/40"
                         title="Resume campaign"
                       >
                         ▶️
                       </button>
                     )}
-                    {campaign.status === 'active' && (
+                    {campaign.status === "active" && (
                       <button
-                        onClick={() => handleStatusChange(campaign.id, 'paused')}
+                        type="button"
+                        onClick={() => handleStatusChange(campaign.id, "paused")}
                         className="glass-button bg-yellow-500/30 hover:bg-yellow-500/40"
                         title="Pause campaign"
                       >
                         ⏸️
                       </button>
                     )}
-                    <Link
-                      to={`/campaigns/${campaign.id}`}
-                      className="glass-button"
-                    >
+                    <Link to={`/campaigns/${campaign.id}`} className="glass-button">
                       View
                     </Link>
-                    {campaign.status !== 'completed' && (
+                    {campaign.status !== "completed" && (
                       <button
+                        type="button"
                         onClick={() => requestDelete(campaign)}
                         className="glass-button bg-red-500/30 hover:bg-red-500/40"
                         title="Delete campaign"
@@ -305,7 +330,9 @@ const Campaigns = () => {
       <ConfirmDialog
         open={deleteDialog.open}
         title="Delete campaign?"
-        message={deleteDialog.campaign ? `This will permanently remove ${deleteDialog.campaign.name}.` : ''}
+        message={
+          deleteDialog.campaign ? `This will permanently remove ${deleteDialog.campaign.name}.` : ""
+        }
         confirmLabel="Delete"
         cancelLabel="Cancel"
         onConfirm={handleDelete}

@@ -5,11 +5,11 @@
  * Usage: node scripts/encrypt-existing-tokens.js
  */
 
-import prisma from '../src/utils/database.js';
-import { encrypt, isEncrypted } from '../src/utils/encryption.js';
+import prisma from "../src/utils/database.js";
+import { encrypt, isEncrypted } from "../src/utils/encryption.js";
 
 async function encryptExistingTokens() {
-  console.log('Starting token encryption migration...\n');
+  console.log("Starting token encryption migration...\n");
 
   try {
     // Fetch all Shopify stores
@@ -53,14 +53,14 @@ async function encryptExistingTokens() {
       }
     }
 
-    console.log('\n--- Migration Summary ---');
+    console.log("\n--- Migration Summary ---");
     console.log(`Total stores: ${stores.length}`);
     console.log(`Newly encrypted: ${encryptedCount}`);
     console.log(`Already encrypted: ${alreadyEncryptedCount}`);
     console.log(`Errors: ${errorCount}`);
-    console.log('\n✓ Migration complete!');
+    console.log("\n✓ Migration complete!");
   } catch (error) {
-    console.error('\n✗ Migration failed:', error.message);
+    console.error("\n✗ Migration failed:", error.message);
     process.exit(1);
   } finally {
     await prisma.$disconnect();

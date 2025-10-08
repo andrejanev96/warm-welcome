@@ -1,19 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import CelebrationOverlay from '../components/animations/CelebrationOverlay.jsx';
-import EnvelopeAnimation from '../components/animations/EnvelopeAnimation.jsx';
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import CelebrationOverlay from "../components/animations/CelebrationOverlay.jsx";
+import EnvelopeAnimation from "../components/animations/EnvelopeAnimation.jsx";
 
 const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    firstName: '',
-    lastName: '',
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const celebrationTimeoutRef = useRef(null);
@@ -28,14 +28,14 @@ const Register = () => {
 
   const isFormValid = Boolean(
     formData.firstName.trim() &&
-    formData.lastName.trim() &&
-    formData.email.trim() &&
-    formData.password.length >= 8
+      formData.lastName.trim() &&
+      formData.email.trim() &&
+      formData.password.length >= 8,
   );
 
   const handleChange = (e) => {
     if (error) {
-      setError('');
+      setError("");
     }
     setFormData((prev) => ({
       ...prev,
@@ -51,7 +51,7 @@ const Register = () => {
     }
 
     if (!isFormValid) {
-      setError('Please complete all fields with a password of at least 8 characters.');
+      setError("Please complete all fields with a password of at least 8 characters.");
       return;
     }
 
@@ -61,10 +61,10 @@ const Register = () => {
     const result = await register(formData);
 
     if (result.success) {
-      setError('');
+      setError("");
       setShowCelebration(true);
       celebrationTimeoutRef.current = setTimeout(() => {
-        navigate('/dashboard');
+        navigate("/dashboard");
       }, 1600);
     } else {
       setError(result.error);
@@ -81,28 +81,37 @@ const Register = () => {
             src="/logo.png"
             alt="WarmWelcome.ai"
             className="w-24 h-24 mx-auto mb-4 drop-shadow-2xl"
-            style={{ filter: 'drop-shadow(0 0 20px rgba(255,165,0,0.4))' }}
+            style={{ filter: "drop-shadow(0 0 20px rgba(255,165,0,0.4))" }}
           />
-          <h1 className="text-5xl font-bold text-white mb-3" style={{ textShadow: '0 0 30px rgba(255,255,255,0.3)' }}>
+          <h1
+            className="text-5xl font-bold text-white mb-3"
+            style={{ textShadow: "0 0 30px rgba(255,255,255,0.3)" }}
+          >
             WarmWelcome.ai
           </h1>
-          <p className="text-lg text-white/80">
-            Transform your onboarding emails with AI
-          </p>
+          <p className="text-lg text-white/80">Transform your onboarding emails with AI</p>
         </div>
 
         {/* Glass Card */}
         <div className="glass-card">
-          <h2 className="text-3xl font-bold mb-8 text-center text-white">
-            Create your account
-          </h2>
+          <h2 className="text-3xl font-bold mb-8 text-center text-white">Create your account</h2>
 
           {/* Error Alert */}
           {error && (
             <div className="glass-alert animate-pulse">
               <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                <svg
+                  aria-hidden="true"
+                  focusable="false"
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 <span>{error}</span>
               </div>
@@ -172,28 +181,28 @@ const Register = () => {
                 className="glass-input"
                 placeholder="••••••••"
               />
-              <p className="mt-2 text-xs text-white/60">
-                Must be at least 8 characters
-              </p>
+              <p className="mt-2 text-xs text-white/60">Must be at least 8 characters</p>
             </div>
 
             <button
               type="submit"
               disabled={loading || !isFormValid}
-              className={`glass-btn ${isFormValid ? 'glass-btn-orange' : ''} mt-6`}
+              className={`glass-btn ${isFormValid ? "glass-btn-orange" : ""} mt-6`}
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-3">
                   <EnvelopeAnimation size="sm" />
                   <span className="font-medium">Creating your space...</span>
                 </span>
-              ) : 'Create account'}
+              ) : (
+                "Create account"
+              )}
             </button>
           </form>
 
           <div className="mt-8 text-center">
             <p className="text-white/80">
-              Already have an account?{' '}
+              Already have an account?{" "}
               <Link to="/login" className="glass-link">
                 Sign in
               </Link>

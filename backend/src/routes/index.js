@@ -1,32 +1,32 @@
-import express from 'express';
-import authRoutes from './auth.js';
-import brandVoiceRoutes from './brandVoice.js';
-import blueprintRoutes from './blueprints.js';
-import campaignRoutes from './campaigns.js';
-import shopifyRoutes from './shopify.js';
-import onboardingRoutes from './onboarding.js';
+import express from "express";
+import authRoutes from "./auth.js";
+import brandVoiceRoutes from "./brandVoice.js";
+import blueprintRoutes from "./blueprints.js";
+import campaignRoutes from "./campaigns.js";
+import shopifyRoutes from "./shopify.js";
+import onboardingRoutes from "./onboarding.js";
 
 const router = express.Router();
 
 // Health check endpoint
-router.get('/health', (req, res) => {
+router.get("/health", (req, res) => {
   res.status(200).json({
     success: true,
-    message: 'WarmWelcome.ai API is running',
+    message: "WarmWelcome.ai API is running",
     timestamp: new Date().toISOString(),
   });
 });
 
 // API routes
-router.use('/auth', authRoutes);
-router.use('/brand-voice', brandVoiceRoutes);
-router.use('/blueprints', blueprintRoutes);
-router.use('/campaigns', campaignRoutes);
-router.use('/shopify', shopifyRoutes);
-router.use('/onboarding', onboardingRoutes);
+router.use("/auth", authRoutes);
+router.use("/brand-voice", brandVoiceRoutes);
+router.use("/blueprints", blueprintRoutes);
+router.use("/campaigns", campaignRoutes);
+router.use("/shopify", shopifyRoutes);
+router.use("/onboarding", onboardingRoutes);
 
 // 404 handler for undefined routes
-router.use('*', (req, res) => {
+router.use("*", (req, res) => {
   res.status(404).json({
     success: false,
     message: `Route ${req.originalUrl} not found`,

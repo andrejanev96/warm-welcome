@@ -1,6 +1,6 @@
-import express from 'express';
-import { authenticate } from '../middleware/auth.js';
-import { validate, campaignSchemas } from '../middleware/validation.js';
+import express from "express";
+import { authenticate } from "../middleware/auth.js";
+import { validate, campaignSchemas } from "../middleware/validation.js";
 import {
   getCampaigns,
   getCampaign,
@@ -9,7 +9,7 @@ import {
   updateCampaignStatus,
   deleteCampaign,
   getCampaignStats,
-} from '../controllers/campaigns.js';
+} from "../controllers/campaigns.js";
 
 const router = express.Router();
 
@@ -17,16 +17,16 @@ const router = express.Router();
 router.use(authenticate);
 
 // Campaign CRUD
-router.get('/', getCampaigns);
-router.get('/:id', getCampaign);
-router.post('/', validate(campaignSchemas.create), createCampaign);
-router.put('/:id', validate(campaignSchemas.update), updateCampaign);
-router.delete('/:id', deleteCampaign);
+router.get("/", getCampaigns);
+router.get("/:id", getCampaign);
+router.post("/", validate(campaignSchemas.create), createCampaign);
+router.put("/:id", validate(campaignSchemas.update), updateCampaign);
+router.delete("/:id", deleteCampaign);
 
 // Campaign status management
-router.patch('/:id/status', validate(campaignSchemas.updateStatus), updateCampaignStatus);
+router.patch("/:id/status", validate(campaignSchemas.updateStatus), updateCampaignStatus);
 
 // Campaign statistics
-router.get('/:id/stats', getCampaignStats);
+router.get("/:id/stats", getCampaignStats);
 
 export default router;

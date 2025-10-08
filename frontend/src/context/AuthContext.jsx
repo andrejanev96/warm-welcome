@@ -1,13 +1,13 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../utils/api';
+import { createContext, useContext, useState, useEffect } from "react";
+import { authAPI } from "../utils/api";
 
 const AuthContext = createContext(null);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -15,24 +15,24 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(localStorage.getItem("token"));
 
   // Load user from localStorage on mount
   useEffect(() => {
     let isMounted = true;
 
     const bootstrap = async () => {
-      const storedUser = localStorage.getItem('user');
+      const storedUser = localStorage.getItem("user");
       if (storedUser) {
         try {
           setUser(JSON.parse(storedUser));
         } catch (error) {
-          console.error('Failed to parse stored user profile', error);
-          localStorage.removeItem('user');
+          console.error("Failed to parse stored user profile", error);
+          localStorage.removeItem("user");
         }
       }
 
-      const storedToken = localStorage.getItem('token');
+      const storedToken = localStorage.getItem("token");
 
       if (!storedToken) {
         if (isMounted) {
@@ -51,15 +51,15 @@ export const AuthProvider = ({ children }) => {
 
         const userData = response.data?.data;
         setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem("user", JSON.stringify(userData));
       } catch (err) {
-        console.warn('Auth session validation failed', err);
+        console.warn("Auth session validation failed", err);
         if (!isMounted) return;
 
         setUser(null);
         setToken(null);
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -81,14 +81,14 @@ export const AuthProvider = ({ children }) => {
 
       setUser(userData);
       setToken(userToken);
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('token', userToken);
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("token", userToken);
 
       return { success: true };
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.message || 'Login failed',
+        error: error.response?.data?.message || "Login failed",
       };
     }
   };
@@ -100,14 +100,14 @@ export const AuthProvider = ({ children }) => {
 
       setUser(newUser);
       setToken(userToken);
-      localStorage.setItem('user', JSON.stringify(newUser));
-      localStorage.setItem('token', userToken);
+      localStorage.setItem("user", JSON.stringify(newUser));
+      localStorage.setItem("token", userToken);
 
       return { success: true };
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.message || 'Registration failed',
+        error: error.response?.data?.message || "Registration failed",
       };
     }
   };
@@ -115,8 +115,8 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
   };
 
   const value = {

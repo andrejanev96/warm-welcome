@@ -1,5 +1,5 @@
-import prisma from '../utils/database.js';
-import { asyncHandler, successResponse, errorResponse } from '../utils/helpers.js';
+import prisma from "../utils/database.js";
+import { asyncHandler, successResponse, errorResponse } from "../utils/helpers.js";
 
 /**
  * @desc    Get user's brand voice
@@ -11,7 +11,7 @@ export const getBrandVoice = asyncHandler(async (req, res) => {
     where: { userId: req.user.id },
   });
 
-  return res.status(200).json(successResponse(brandVoice, 'Brand voice retrieved successfully.'));
+  return res.status(200).json(successResponse(brandVoice, "Brand voice retrieved successfully."));
 });
 
 /**
@@ -20,19 +20,12 @@ export const getBrandVoice = asyncHandler(async (req, res) => {
  * @access  Private
  */
 export const upsertBrandVoice = asyncHandler(async (req, res) => {
-  const {
-    businessName,
-    businessDescription,
-    tone,
-    values,
-    talkingPoints,
-    dosDonts,
-    exampleCopy,
-  } = req.body;
+  const { businessName, businessDescription, tone, values, talkingPoints, dosDonts, exampleCopy } =
+    req.body;
 
   // Validate required fields
   if (!businessName || !tone) {
-    return res.status(400).json(errorResponse('Business name and tone are required.'));
+    return res.status(400).json(errorResponse("Business name and tone are required."));
   }
 
   // Convert arrays/objects to JSON strings if provided
@@ -55,7 +48,7 @@ export const upsertBrandVoice = asyncHandler(async (req, res) => {
     },
   });
 
-  return res.status(200).json(successResponse(brandVoice, 'Brand voice saved successfully.'));
+  return res.status(200).json(successResponse(brandVoice, "Brand voice saved successfully."));
 });
 
 /**
@@ -69,12 +62,12 @@ export const deleteBrandVoice = asyncHandler(async (req, res) => {
   });
 
   if (!brandVoice) {
-    return res.status(404).json(errorResponse('Brand voice not found.'));
+    return res.status(404).json(errorResponse("Brand voice not found."));
   }
 
   await prisma.brandVoice.delete({
     where: { userId: req.user.id },
   });
 
-  return res.status(200).json(successResponse(null, 'Brand voice deleted successfully.'));
+  return res.status(200).json(successResponse(null, "Brand voice deleted successfully."));
 });

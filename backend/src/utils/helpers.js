@@ -1,7 +1,7 @@
 /**
  * Standard API response formatter
  */
-export const successResponse = (data, message = 'Success') => ({
+export const successResponse = (data, message = "Success") => ({
   success: true,
   message,
   data,

@@ -2,24 +2,24 @@ const ConfirmDialog = ({
   open,
   title,
   message,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel = "Confirm",
+  cancelLabel = "Cancel",
   onConfirm,
   onCancel,
   loading = false,
-  tone = 'default',
+  tone = "default",
 }) => {
   if (!open) {
     return null;
   }
 
   const confirmButtonClass = [
-    'confirm-dialog__button',
-    'confirm-dialog__button--confirm',
-    tone === 'danger' ? 'confirm-dialog__button--confirm-danger' : '',
+    "confirm-dialog__button",
+    "confirm-dialog__button--confirm",
+    tone === "danger" ? "confirm-dialog__button--confirm-danger" : "",
   ]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 
   return (
     <div className="confirm-dialog-overlay" role="alertdialog" aria-modal="true">

@@ -1,6 +1,6 @@
-import prisma from '../utils/database.js';
-import { asyncHandler, successResponse, errorResponse } from '../utils/helpers.js';
-import { logger } from '../utils/logger.js';
+import prisma from "../utils/database.js";
+import { asyncHandler, successResponse, errorResponse } from "../utils/helpers.js";
+import { logger } from "../utils/logger.js";
 
 const parseConditions = (value) => {
   if (!value) return null;
@@ -18,9 +18,9 @@ const serializeTrigger = (trigger) => ({
 
 const withStats = (campaign) => {
   const emails = campaign.emails ?? [];
-  const sent = emails.filter((email) => email.status === 'sent').length;
-  const pending = emails.filter((email) => email.status === 'pending').length;
-  const failed = emails.filter((email) => email.status === 'failed').length;
+  const sent = emails.filter((email) => email.status === "sent").length;
+  const pending = emails.filter((email) => email.status === "pending").length;
+  const failed = emails.filter((email) => email.status === "failed").length;
   const opened = emails.filter((email) => Boolean(email.openedAt)).length;
   const clicked = emails.filter((email) => Boolean(email.clickedAt)).length;
 
@@ -75,7 +75,7 @@ export const getCampaigns = asyncHandler(async (req, res) => {
         },
       },
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
   });
 
   const campaignsWithStats = campaigns.map((campaign) => withStats(campaign));
@@ -118,7 +118,7 @@ export const getCampaign = asyncHandler(async (req, res) => {
   });
 
   if (!campaign) {
-    return res.status(404).json(errorResponse('Campaign not found'));
+    return res.status(404).json(errorResponse("Campaign not found"));
   }
 
   res.status(200).json(successResponse(withStats(campaign)));
@@ -128,10 +128,20 @@ export const getCampaign = asyncHandler(async (req, res) => {
  * Create new campaign
  */
 export const createCampaign = asyncHandler(async (req, res) => {
-  const { name, description, goal, storeId, blueprintId, triggerType, triggerConditions, startDate, endDate } = req.body;
+  const {
+    name,
+    description,
+    goal,
+    storeId,
+    blueprintId,
+    triggerType,
+    triggerConditions,
+    startDate,
+    endDate,
+  } = req.body;
 
   if (!name) {
-    return res.status(400).json(errorResponse('Campaign name is required'));
+    return res.status(400).json(errorResponse("Campaign name is required"));
   }
 
   // Validate store if provided
@@ -145,7 +155,7 @@ export const createCampaign = asyncHandler(async (req, res) => {
     });
 
     if (!store) {
-      return res.status(404).json(errorResponse('Store not found or inactive'));
+      return res.status(404).json(errorResponse("Store not found or inactive"));
     }
   }
 
@@ -159,7 +169,7 @@ export const createCampaign = asyncHandler(async (req, res) => {
     });
 
     if (!blueprint) {
-      return res.status(404).json(errorResponse('Blueprint not found'));
+      return res.status(404).json(errorResponse("Blueprint not found"));
     }
   }
 
@@ -171,20 +181,22 @@ export const createCampaign = asyncHandler(async (req, res) => {
         name,
         description: description?.trim() ? description : null,
         goal: goal || null,
-        status: 'draft',
+        status: "draft",
         userId: req.user.id,
         storeId: storeId || null,
         blueprintId: blueprintId || null,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
-        triggers: triggerType ? {
-          create: {
-            name: `${name} - Trigger`,
-            type: triggerType,
-            delay: triggerConditions?.delay ?? 0,
-            conditions: triggerConditions ? JSON.stringify(triggerConditions) : null,
-          },
-        } : undefined,
+        triggers: triggerType
+          ? {
+              create: {
+                name: `${name} - Trigger`,
+                type: triggerType,
+                delay: triggerConditions?.delay ?? 0,
+                conditions: triggerConditions ? JSON.stringify(triggerConditions) : null,
+              },
+            }
+          : undefined,
       },
       include: {
         triggers: true,
@@ -213,11 +225,11 @@ export const createCampaign = asyncHandler(async (req, res) => {
       },
     });
   } catch (error) {
-    logger.error('createCampaign error', error);
+    logger.error("createCampaign error", error);
     throw error;
   }
 
-  res.status(201).json(successResponse(withStats(campaign), 'Campaign created successfully'));
+  res.status(201).json(successResponse(withStats(campaign), "Campaign created successfully"));
 });
 
 /**
@@ -225,7 +237,17 @@ export const createCampaign = asyncHandler(async (req, res) => {
  */
 export const updateCampaign = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, description, goal, storeId, blueprintId, startDate, endDate, triggerType, triggerConditions } = req.body;
+  const {
+    name,
+    description,
+    goal,
+    storeId,
+    blueprintId,
+    startDate,
+    endDate,
+    triggerType,
+    triggerConditions,
+  } = req.body;
 
   const existingCampaign = await prisma.campaign.findFirst({
     where: {
@@ -235,7 +257,7 @@ export const updateCampaign = asyncHandler(async (req, res) => {
   });
 
   if (!existingCampaign) {
-    return res.status(404).json(errorResponse('Campaign not found'));
+    return res.status(404).json(errorResponse("Campaign not found"));
   }
 
   const data = {};
@@ -271,7 +293,7 @@ export const updateCampaign = asyncHandler(async (req, res) => {
       });
 
       if (!store) {
-        return res.status(404).json(errorResponse('Store not found or inactive'));
+        return res.status(404).json(errorResponse("Store not found or inactive"));
       }
     }
     data.storeId = storeId || null;
@@ -287,7 +309,7 @@ export const updateCampaign = asyncHandler(async (req, res) => {
       });
 
       if (!blueprint) {
-        return res.status(404).json(errorResponse('Blueprint not found'));
+        return res.status(404).json(errorResponse("Blueprint not found"));
       }
     }
     data.blueprintId = blueprintId || null;
@@ -403,7 +425,9 @@ export const updateCampaign = asyncHandler(async (req, res) => {
     });
   }
 
-  res.status(200).json(successResponse(withStats(updatedCampaign), 'Campaign updated successfully'));
+  res
+    .status(200)
+    .json(successResponse(withStats(updatedCampaign), "Campaign updated successfully"));
 });
 
 /**
@@ -413,8 +437,10 @@ export const updateCampaignStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 
-  if (!['active', 'paused', 'completed', 'draft'].includes(status)) {
-    return res.status(400).json(errorResponse('Invalid status. Must be: draft, active, paused, or completed'));
+  if (!["active", "paused", "completed", "draft"].includes(status)) {
+    return res
+      .status(400)
+      .json(errorResponse("Invalid status. Must be: draft, active, paused, or completed"));
   }
 
   const campaign = await prisma.campaign.findFirst({
@@ -425,7 +451,7 @@ export const updateCampaignStatus = asyncHandler(async (req, res) => {
   });
 
   if (!campaign) {
-    return res.status(404).json(errorResponse('Campaign not found'));
+    return res.status(404).json(errorResponse("Campaign not found"));
   }
 
   const updatedCampaign = await prisma.campaign.update({
@@ -458,7 +484,9 @@ export const updateCampaignStatus = asyncHandler(async (req, res) => {
     },
   });
 
-  res.status(200).json(successResponse(withStats(updatedCampaign), `Campaign ${status} successfully`));
+  res
+    .status(200)
+    .json(successResponse(withStats(updatedCampaign), `Campaign ${status} successfully`));
 });
 
 /**
@@ -478,20 +506,20 @@ export const deleteCampaign = asyncHandler(async (req, res) => {
   });
 
   if (!campaign) {
-    return res.status(404).json(errorResponse('Campaign not found'));
+    return res.status(404).json(errorResponse("Campaign not found"));
   }
 
-  if (campaign.status === 'active' && campaign.emails.some((email) => email.status === 'sent')) {
-    return res.status(400).json(
-      errorResponse('Cannot delete active campaign with sent emails. Pause it first.')
-    );
+  if (campaign.status === "active" && campaign.emails.some((email) => email.status === "sent")) {
+    return res
+      .status(400)
+      .json(errorResponse("Cannot delete active campaign with sent emails. Pause it first."));
   }
 
   await prisma.campaign.delete({
     where: { id: campaign.id },
   });
 
-  res.status(200).json(successResponse(null, 'Campaign deleted successfully'));
+  res.status(200).json(successResponse(null, "Campaign deleted successfully"));
 });
 
 /**
@@ -511,19 +539,21 @@ export const getCampaignStats = asyncHandler(async (req, res) => {
   });
 
   if (!campaign) {
-    return res.status(404).json(errorResponse('Campaign not found'));
+    return res.status(404).json(errorResponse("Campaign not found"));
   }
 
   const stats = withStats({ ...campaign, triggers: [] });
 
-  res.status(200).json(successResponse({
-    totalEmails: stats.emailsSent + stats.emailsPending + stats.emailsFailed,
-    sent: stats.emailsSent,
-    pending: stats.emailsPending,
-    failed: stats.emailsFailed,
-    opened: campaign.emails.filter((email) => Boolean(email.openedAt)).length,
-    clicked: campaign.emails.filter((email) => Boolean(email.clickedAt)).length,
-    openRate: stats.openRate,
-    clickRate: stats.clickRate,
-  }));
+  res.status(200).json(
+    successResponse({
+      totalEmails: stats.emailsSent + stats.emailsPending + stats.emailsFailed,
+      sent: stats.emailsSent,
+      pending: stats.emailsPending,
+      failed: stats.emailsFailed,
+      opened: campaign.emails.filter((email) => Boolean(email.openedAt)).length,
+      clicked: campaign.emails.filter((email) => Boolean(email.clickedAt)).length,
+      openRate: stats.openRate,
+      clickRate: stats.clickRate,
+    }),
+  );
 });

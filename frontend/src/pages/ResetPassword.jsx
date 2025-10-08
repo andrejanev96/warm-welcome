@@ -1,17 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { authAPI } from '../utils/api';
-import CelebrationOverlay from '../components/animations/CelebrationOverlay.jsx';
-import EnvelopeAnimation from '../components/animations/EnvelopeAnimation.jsx';
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { authAPI } from "../utils/api";
+import CelebrationOverlay from "../components/animations/CelebrationOverlay.jsx";
+import EnvelopeAnimation from "../components/animations/EnvelopeAnimation.jsx";
 
 const ResetPassword = () => {
   const { token } = useParams();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ password: '', confirmPassword: '' });
-  const [status, setStatus] = useState({ type: 'idle', message: '' });
+  const [formData, setFormData] = useState({ password: "", confirmPassword: "" });
+  const [status, setStatus] = useState({ type: "idle", message: "" });
   const [submitting, setSubmitting] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [overlayContent, setOverlayContent] = useState({ title: '', message: '' });
+  const [overlayContent, setOverlayContent] = useState({ title: "", message: "" });
   const celebrationTimeoutRef = useRef(null);
 
   useEffect(() => {
@@ -29,42 +29,42 @@ const ResetPassword = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setStatus({ type: 'idle', message: '' });
+    setStatus({ type: "idle", message: "" });
 
     if (submitting) {
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setStatus({ type: 'error', message: 'Passwords do not match.' });
+      setStatus({ type: "error", message: "Passwords do not match." });
       return;
     }
 
     setSubmitting(true);
     setOverlayContent({
-      title: 'Updating password... 🔒',
-      message: 'Securing your account in a blink.',
+      title: "Updating password... 🔒",
+      message: "Securing your account in a blink.",
     });
     setShowCelebration(true);
 
     try {
       await authAPI.resetPassword({ token, password: formData.password });
-      setStatus({ type: 'success', message: 'Password updated! Redirecting to sign in...' });
+      setStatus({ type: "success", message: "Password updated! Redirecting to sign in..." });
       setOverlayContent({
-        title: 'All set! 🎉',
-        message: 'Redirecting you to sign in with your new password.',
+        title: "All set! 🎉",
+        message: "Redirecting you to sign in with your new password.",
       });
       if (celebrationTimeoutRef.current) {
         clearTimeout(celebrationTimeoutRef.current);
       }
       celebrationTimeoutRef.current = setTimeout(() => {
         setShowCelebration(false);
-        navigate('/login');
+        navigate("/login");
       }, 2000);
     } catch (error) {
       setStatus({
-        type: 'error',
-        message: error.response?.data?.message || 'Unable to reset password. Please try again.',
+        type: "error",
+        message: error.response?.data?.message || "Unable to reset password. Please try again.",
       });
       setShowCelebration(false);
     } finally {
@@ -80,11 +80,11 @@ const ResetPassword = () => {
             src="/logo.png"
             alt="WarmWelcome.ai"
             className="w-24 h-24 mx-auto mb-4 drop-shadow-2xl"
-            style={{ filter: 'drop-shadow(0 0 20px rgba(255,165,0,0.4))' }}
+            style={{ filter: "drop-shadow(0 0 20px rgba(255,165,0,0.4))" }}
           />
           <h1
             className="text-5xl font-bold text-white mb-3"
-            style={{ textShadow: '0 0 30px rgba(255,255,255,0.3)' }}
+            style={{ textShadow: "0 0 30px rgba(255,255,255,0.3)" }}
           >
             Reset Password
           </h1>
@@ -96,12 +96,12 @@ const ResetPassword = () => {
         <div className="glass-card">
           <h2 className="text-3xl font-bold mb-6 text-center text-white">Set new password</h2>
 
-          {status.type !== 'idle' && (
+          {status.type !== "idle" && (
             <div
               className={`glass-alert border ${
-                status.type === 'success'
-                  ? 'border-green-400/40 text-green-100 bg-green-500/20'
-                  : 'border-red-500/40 text-red-100 bg-red-500/20'
+                status.type === "success"
+                  ? "border-green-400/40 text-green-100 bg-green-500/20"
+                  : "border-red-500/40 text-red-100 bg-red-500/20"
               }`}
             >
               {status.message}
@@ -143,17 +143,15 @@ const ResetPassword = () => {
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="glass-btn glass-btn-orange"
-            >
+            <button type="submit" disabled={submitting} className="glass-btn glass-btn-orange">
               {submitting ? (
                 <span className="flex items-center justify-center gap-3">
                   <EnvelopeAnimation size="sm" />
                   <span className="font-medium">Locking it in...</span>
                 </span>
-              ) : 'Update password'}
+              ) : (
+                "Update password"
+              )}
             </button>
           </form>
 

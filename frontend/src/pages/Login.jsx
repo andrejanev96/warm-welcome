@@ -1,17 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import CelebrationOverlay from '../components/animations/CelebrationOverlay.jsx';
-import EnvelopeAnimation from '../components/animations/EnvelopeAnimation.jsx';
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import CelebrationOverlay from "../components/animations/CelebrationOverlay.jsx";
+import EnvelopeAnimation from "../components/animations/EnvelopeAnimation.jsx";
 
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const celebrationTimeoutRef = useRef(null);
@@ -27,7 +27,7 @@ const Login = () => {
   const handleChange = (e) => {
     // Clear error when user starts typing
     if (error) {
-      setError('');
+      setError("");
     }
     setFormData({
       ...formData,
@@ -48,10 +48,10 @@ const Login = () => {
     const result = await login(formData.email, formData.password);
 
     if (result.success) {
-      setError('');
+      setError("");
       setShowCelebration(true);
       celebrationTimeoutRef.current = setTimeout(() => {
-        navigate('/dashboard');
+        navigate("/dashboard");
       }, 1400);
     } else {
       setError(result.error);
@@ -68,14 +68,15 @@ const Login = () => {
             src="/logo.png"
             alt="WarmWelcome.ai"
             className="w-24 h-24 mx-auto mb-4 drop-shadow-2xl"
-            style={{ filter: 'drop-shadow(0 0 20px rgba(255,165,0,0.4))' }}
+            style={{ filter: "drop-shadow(0 0 20px rgba(255,165,0,0.4))" }}
           />
-          <h1 className="text-5xl font-bold text-white mb-3" style={{ textShadow: '0 0 30px rgba(255,255,255,0.3)' }}>
+          <h1
+            className="text-5xl font-bold text-white mb-3"
+            style={{ textShadow: "0 0 30px rgba(255,255,255,0.3)" }}
+          >
             WarmWelcome.ai
           </h1>
-          <p className="text-lg text-white/80">
-            Transform your onboarding emails with AI
-          </p>
+          <p className="text-lg text-white/80">Transform your onboarding emails with AI</p>
         </div>
 
         {/* Glass Card */}
@@ -88,8 +89,18 @@ const Login = () => {
           {error && (
             <div className="glass-alert animate-pulse">
               <div className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                <svg
+                  aria-hidden="true"
+                  focusable="false"
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 <span>{error}</span>
               </div>
@@ -134,23 +145,21 @@ const Login = () => {
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="glass-btn glass-btn-orange mt-6"
-            >
+            <button type="submit" disabled={loading} className="glass-btn glass-btn-orange mt-6">
               {loading ? (
                 <span className="flex items-center justify-center gap-3">
                   <EnvelopeAnimation size="sm" />
                   <span className="font-medium">Sending warm welcome...</span>
                 </span>
-              ) : 'Sign in'}
+              ) : (
+                "Sign in"
+              )}
             </button>
           </form>
 
           <div className="mt-8 text-center">
             <p className="text-white/80">
-              Don't have an account?{' '}
+              Don't have an account?{" "}
               <Link to="/register" className="glass-link">
                 Sign up
               </Link>
