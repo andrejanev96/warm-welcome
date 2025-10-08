@@ -1,14 +1,71 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import CelebrationOverlay from './animations/CelebrationOverlay.jsx';
+import EnvelopeAnimation from './animations/EnvelopeAnimation.jsx';
+import OnboardingChecklist from './OnboardingChecklist';
+import api from '../utils/api';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [showLogoutAnimation, setShowLogoutAnimation] = useState(false);
+  const [onboardingProgress, setOnboardingProgress] = useState(null);
+  const [showOnboardingDropdown, setShowOnboardingDropdown] = useState(false);
+  const logoutTimeoutRef = useRef(null);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (logoutTimeoutRef.current) {
+        clearTimeout(logoutTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Fetch onboarding progress
+  useEffect(() => {
+    const fetchOnboardingProgress = async () => {
+      try {
+        const response = await api.get('/onboarding/progress');
+        setOnboardingProgress(response.data.data);
+      } catch (error) {
+        console.error('Failed to load onboarding progress', error);
+      }
+    };
+
+    fetchOnboardingProgress();
+  }, []);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowOnboardingDropdown(false);
+      }
+    };
+
+    if (showOnboardingDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showOnboardingDropdown]);
 
   const handleLogout = () => {
-    logout();
-    navigate('/login');
+    if (showLogoutAnimation) {
+      return;
+    }
+
+    setShowLogoutAnimation(true);
+
+    logoutTimeoutRef.current = setTimeout(() => {
+      logout();
+      navigate('/login');
+    }, 1100);
   };
 
   const isActive = (path) => {
@@ -104,14 +161,47 @@ const Layout = ({ children }) => {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              {/* Onboarding notification - only show if not complete */}
+              {onboardingProgress && !onboardingProgress.isComplete && (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setShowOnboardingDropdown(!showOnboardingDropdown)}
+                    className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
+                    aria-label="Getting Started Checklist"
+                  >
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    {onboardingProgress.totalSteps - onboardingProgress.completedCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-orange-400 to-pink-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                        {onboardingProgress.totalSteps - onboardingProgress.completedCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Dropdown */}
+                  {showOnboardingDropdown && (
+                    <div className="absolute right-0 mt-2 bg-gray-900/95 backdrop-blur-xl shadow-2xl border border-white/20 rounded-2xl overflow-hidden">
+                      <OnboardingChecklist variant="dropdown" />
+                    </div>
+                  )}
+                </div>
+              )}
+
               <span className="text-sm text-white/80">
                 {user?.firstName || user?.email}
               </span>
               <button
                 onClick={handleLogout}
                 className="glass-button text-sm"
+                disabled={showLogoutAnimation}
               >
-                Logout
+                {showLogoutAnimation ? (
+                  <span className="flex items-center gap-2">
+                    <EnvelopeAnimation size="sm" />
+                    <span>Logging out...</span>
+                  </span>
+                ) : 'Logout'}
               </button>
             </div>
           </div>
@@ -122,6 +212,8 @@ const Layout = ({ children }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </div>
+
+      <CelebrationOverlay show={showLogoutAnimation} variant="logout" />
     </div>
   );
 };

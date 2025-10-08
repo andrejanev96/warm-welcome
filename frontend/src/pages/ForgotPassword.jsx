@@ -1,16 +1,39 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { authAPI } from '../utils/api';
+import CelebrationOverlay from '../components/animations/CelebrationOverlay.jsx';
+import EnvelopeAnimation from '../components/animations/EnvelopeAnimation.jsx';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [overlayContent, setOverlayContent] = useState({ title: '', message: '' });
+  const celebrationTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (submitting) {
+      return;
+    }
+
     setSubmitting(true);
     setStatus({ type: 'idle', message: '' });
+    setOverlayContent({
+      title: 'Sending reset link... ✉️',
+      message: 'Hang tight while we warm up your inbox.',
+    });
+    setShowCelebration(true);
 
     try {
       await authAPI.forgotPassword({ email });
@@ -19,11 +42,22 @@ const ForgotPassword = () => {
         message: 'If that email exists, we just sent a reset link.',
       });
       setEmail('');
+      setOverlayContent({
+        title: 'Email sent! 💌',
+        message: 'Check your inbox for password reset instructions.',
+      });
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
+      }
+      celebrationTimeoutRef.current = setTimeout(() => {
+        setShowCelebration(false);
+      }, 2000);
     } catch (error) {
       setStatus({
         type: 'error',
         message: error.response?.data?.message || 'Unable to process your request right now.',
       });
+      setShowCelebration(false);
     } finally {
       setSubmitting(false);
     }
@@ -87,7 +121,12 @@ const ForgotPassword = () => {
               disabled={submitting}
               className="glass-btn glass-btn-orange"
             >
-              {submitting ? 'Sending...' : 'Send reset link'}
+              {submitting ? (
+                <span className="flex items-center justify-center gap-3">
+                  <EnvelopeAnimation size="sm" />
+                  <span className="font-medium">Sending magic...</span>
+                </span>
+              ) : 'Send reset link'}
             </button>
           </form>
 
@@ -102,6 +141,12 @@ const ForgotPassword = () => {
         <div className="absolute top-40 right-10 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
       </div>
+
+      <CelebrationOverlay
+        show={showCelebration}
+        title={overlayContent.title}
+        message={overlayContent.message}
+      />
     </div>
   );
 };

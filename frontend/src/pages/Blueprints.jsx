@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Alert from '../components/Alert';
+import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import api from '../utils/api';
 
 const Blueprints = () => {
@@ -9,6 +10,7 @@ const Blueprints = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, blueprint: null, loading: false });
 
   const categories = {
     welcome: { icon: '👋', label: 'Welcome' },
@@ -37,14 +39,29 @@ const Blueprints = () => {
     fetchBlueprints();
   }, [fetchBlueprints]);
 
-  const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this blueprint?')) return;
+  const requestDelete = (blueprint) => {
+    setDeleteDialog({ open: true, blueprint, loading: false });
+  };
+
+  const closeDeleteDialog = () => {
+    setDeleteDialog((prev) => (prev.loading ? prev : { open: false, blueprint: null, loading: false }));
+  };
+
+  const handleDelete = async () => {
+    const blueprint = deleteDialog.blueprint;
+    if (!blueprint) {
+      return;
+    }
+
+    setDeleteDialog((prev) => ({ ...prev, loading: true }));
 
     try {
-      await api.delete(`/blueprints/${id}`);
+      await api.delete(`/blueprints/${blueprint.id}`);
       setSuccess('Blueprint deleted successfully');
+      setDeleteDialog({ open: false, blueprint: null, loading: false });
       fetchBlueprints();
     } catch (err) {
+      setDeleteDialog((prev) => ({ ...prev, loading: false }));
       setError(err.response?.data?.message || 'Failed to delete blueprint');
       console.error('Failed to delete blueprint', err);
     }
@@ -173,7 +190,7 @@ const Blueprints = () => {
                       Edit
                     </Link>
                     <button
-                      onClick={() => handleDelete(blueprint.id)}
+                      onClick={() => requestDelete(blueprint)}
                       className="glass-button bg-red-500/30 hover:bg-red-500/40"
                       title="Delete blueprint"
                     >
@@ -186,6 +203,18 @@ const Blueprints = () => {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deleteDialog.open}
+        title="Delete blueprint?"
+        message={deleteDialog.blueprint ? `This will permanently remove ${deleteDialog.blueprint.name}.` : ''}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleDelete}
+        onCancel={closeDeleteDialog}
+        loading={deleteDialog.loading}
+        tone="danger"
+      />
     </Layout>
   );
 };

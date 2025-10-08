@@ -1,7 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Alert from '../components/Alert';
+import CelebrationOverlay from '../components/animations/CelebrationOverlay.jsx';
+import ConfirmDialog from '../components/ConfirmDialog.jsx';
+import EnvelopeAnimation from '../components/animations/EnvelopeAnimation.jsx';
 import api from '../utils/api';
 
 const Integrations = () => {
@@ -13,6 +16,18 @@ const Integrations = () => {
   const [shopDomain, setShopDomain] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationContent, setCelebrationContent] = useState({ title: '', message: '' });
+  const [disconnectDialog, setDisconnectDialog] = useState({ open: false, store: null, loading: false });
+  const celebrationTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const fetchStores = useCallback(async () => {
     setLoading(true);
@@ -36,13 +51,34 @@ const Integrations = () => {
     const shop = searchParams.get('shop');
     if (shop) {
       setSuccess(`Successfully connected ${shop}!`);
+      setCelebrationContent({
+        title: `${shop} connected! 🎉`,
+        message: 'WarmWelcome is now synced with your store.',
+      });
+      setShowCelebration(true);
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
+      }
+      celebrationTimeoutRef.current = setTimeout(() => {
+        setShowCelebration(false);
+      }, 2200);
     }
   }, [searchParams, activeTab, fetchStores]);
 
   const handleConnect = async (e) => {
     e.preventDefault();
+
+    if (connectLoading) {
+      return;
+    }
+
     setError('');
     setConnectLoading(true);
+    setCelebrationContent({
+      title: 'Preparing Shopify install... ⚙️',
+      message: "We're getting your permissions ready.",
+    });
+    setShowCelebration(true);
 
     try {
       const cleanDomain = shopDomain.replace('.myshopify.com', '');
@@ -50,27 +86,58 @@ const Integrations = () => {
       const response = await api.post('/shopify/install', { shop: cleanDomain });
 
       if (response.data.data?.installUrl) {
+        setCelebrationContent({
+          title: 'Opening Shopify... 🛍️',
+          message: 'Approve the connection to finalize setup.',
+        });
         window.location.href = response.data.data.installUrl;
+      } else {
+        setShowCelebration(false);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to connect store');
+      setShowCelebration(false);
     } finally {
       setConnectLoading(false);
       setShopDomain('');
     }
   };
 
-  const handleDisconnect = async (storeId, shopDomain) => {
-    if (!confirm(`Are you sure you want to disconnect ${shopDomain}?`)) {
+  const requestDisconnect = (store) => {
+    setDisconnectDialog({ open: true, store, loading: false });
+  };
+
+  const closeDisconnectDialog = () => {
+    setDisconnectDialog((prev) => (prev.loading ? prev : { open: false, store: null, loading: false }));
+  };
+
+  const handleDisconnect = async () => {
+    const store = disconnectDialog.store;
+    if (!store) {
       return;
     }
 
+    setDisconnectDialog((prev) => ({ ...prev, loading: true }));
+
     try {
-      await api.post(`/shopify/stores/${storeId}/disconnect`);
+      await api.post(`/shopify/stores/${store.id}/disconnect`);
 
       setSuccess('Store disconnected successfully');
+      setCelebrationContent({
+        title: 'Store disconnected ✅',
+        message: `${store.shopDomain} has been paused. You can reconnect anytime.`,
+      });
+      setShowCelebration(true);
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
+      }
+      celebrationTimeoutRef.current = setTimeout(() => {
+        setShowCelebration(false);
+      }, 1800);
+      setDisconnectDialog({ open: false, store: null, loading: false });
       await fetchStores();
     } catch (err) {
+      setDisconnectDialog((prev) => ({ ...prev, loading: false }));
       setError(err.response?.data?.message || 'Failed to disconnect store');
     }
   };
@@ -80,6 +147,17 @@ const Integrations = () => {
       await api.post(`/shopify/stores/${storeId}/reconnect`);
 
       setSuccess(`${shopDomain} reconnected successfully`);
+      setCelebrationContent({
+        title: 'Store reconnected! 🔄',
+        message: `${shopDomain} is ready to sync again.`,
+      });
+      setShowCelebration(true);
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
+      }
+      celebrationTimeoutRef.current = setTimeout(() => {
+        setShowCelebration(false);
+      }, 1800);
       await fetchStores();
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to reconnect store');
@@ -203,12 +281,9 @@ const Integrations = () => {
                 className="glass-button w-full justify-center"
               >
                 {connectLoading ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Connecting...
+                  <span className="flex items-center gap-3">
+                    <EnvelopeAnimation size="sm" />
+                    <span className="font-medium">Connecting...</span>
                   </span>
                 ) : (
                   'Connect Store'
@@ -280,7 +355,7 @@ const Integrations = () => {
                               Active
                             </span>
                             <button
-                              onClick={() => handleDisconnect(store.id, store.shopDomain)}
+                              onClick={() => requestDisconnect(store)}
                               className="px-3 py-1.5 text-xs font-medium bg-red-500/20 text-red-300 hover:bg-red-500/30 rounded-lg transition-colors"
                             >
                               Disconnect
@@ -327,6 +402,24 @@ const Integrations = () => {
           </p>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={disconnectDialog.open}
+        title="Disconnect store?"
+        message={disconnectDialog.store ? `Disconnect ${disconnectDialog.store.shopDomain}? Automations linked to this store will pause.` : ''}
+        confirmLabel="Disconnect"
+        cancelLabel="Keep connected"
+        onConfirm={handleDisconnect}
+        onCancel={closeDisconnectDialog}
+        loading={disconnectDialog.loading}
+        tone="danger"
+      />
+
+      <CelebrationOverlay
+        show={showCelebration}
+        title={celebrationContent.title}
+        message={celebrationContent.message}
+      />
     </Layout>
   );
 };

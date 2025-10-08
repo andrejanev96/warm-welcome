@@ -186,6 +186,340 @@
   .btn-secondary {
     @apply bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-4 focus:ring-gray-200;
   }
+
+  .glass-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .celebration-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+
+  .celebration-overlay--visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .celebration-overlay__content {
+    @apply rounded-2xl px-10 py-12 text-white shadow-2xl;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(79, 70, 229, 0.25));
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    max-width: 24rem;
+    width: min(90%, 24rem);
+    text-align: center;
+    transform: translateY(16px) scale(0.96);
+    opacity: 0;
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease;
+  }
+
+  .celebration-overlay--visible .celebration-overlay__content {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+
+  .celebration-overlay__title {
+    @apply text-2xl font-semibold mt-6 mb-2;
+    text-shadow: 0 4px 18px rgba(79, 70, 229, 0.45);
+  }
+
+  .celebration-overlay__message {
+    @apply text-base text-white/80;
+  }
+
+  .confirm-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 1.5rem;
+  }
+
+  .confirm-dialog {
+    width: min(26rem, 100%);
+    background: rgba(15, 23, 42, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 1.25rem;
+    padding: 1.75rem;
+    box-shadow: 0 24px 48px rgba(30, 41, 59, 0.45);
+    color: white;
+  }
+
+  .confirm-dialog__title {
+    @apply text-xl font-semibold mb-2;
+  }
+
+  .confirm-dialog__message {
+    @apply text-sm text-white/80 mb-6;
+  }
+
+  .confirm-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+
+  .confirm-dialog__button {
+    @apply px-4 py-2 rounded-lg font-medium transition-all;
+    min-width: 6rem;
+  }
+
+  .confirm-dialog__button--cancel {
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    color: white;
+  }
+
+  .confirm-dialog__button--cancel:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  .confirm-dialog__button--confirm {
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.95), rgba(249, 115, 22, 0.95));
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    color: white;
+  }
+
+  .confirm-dialog__button--confirm:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(249, 115, 22, 0.35);
+  }
+
+  .confirm-dialog__button--confirm-danger {
+    background: linear-gradient(135deg, rgba(248, 113, 113, 0.95), rgba(239, 68, 68, 0.95));
+    box-shadow: 0 12px 24px rgba(239, 68, 68, 0.35);
+  }
+
+  .confirm-dialog__button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .confirm-dialog__loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .confirm-dialog__spinner {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    border-top-color: transparent;
+    border-radius: 9999px;
+    animation: confirm-spin 0.75s linear infinite;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .envelope-animation {
+    position: relative;
+    display: inline-flex;
+    justify-content: center;
+    align-items: flex-end;
+    width: 3.5rem;
+    height: 2.8rem;
+  }
+
+  .envelope-animation--sm {
+    width: 2.6rem;
+    height: 2rem;
+  }
+
+  .envelope-animation--md {
+    width: 3.5rem;
+    height: 2.8rem;
+  }
+
+  .envelope-animation--lg {
+    width: 5.5rem;
+    height: 4.2rem;
+  }
+
+  .envelope-animation__body,
+  .envelope-animation__flap,
+  .envelope-animation__letter {
+    position: absolute;
+    left: 0;
+  }
+
+  .envelope-animation__letter {
+    width: 80%;
+    left: 10%;
+    bottom: 14%;
+    height: 58%;
+    background: #fff7ed;
+    border-radius: 0.45rem;
+    box-shadow: 0 10px 20px rgba(249, 115, 22, 0.25);
+    animation: envelope-letter 2.8s infinite ease-in-out;
+    z-index: 0;
+  }
+
+  .envelope-animation__body {
+    bottom: 0;
+    width: 100%;
+    height: 72%;
+    border-radius: 0.65rem;
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.95), rgba(251, 146, 60, 0.9));
+    border: 2px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 14px 26px rgba(249, 115, 22, 0.35);
+    z-index: 1;
+  }
+
+  .envelope-animation__flap {
+    top: 0;
+    width: 100%;
+    height: 60%;
+    border-top-left-radius: 0.65rem;
+    border-top-right-radius: 0.65rem;
+    background: linear-gradient(135deg, rgba(255, 237, 213, 0.95), rgba(251, 191, 168, 0.9));
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    clip-path: polygon(0 0, 50% 60%, 100% 0, 100% 100%, 0 100%);
+    transform-origin: top;
+    animation: envelope-flap 2.8s infinite ease-in-out;
+    z-index: 2;
+  }
+
+  .envelope-animation--celebration .envelope-animation__body {
+    box-shadow: 0 18px 30px rgba(99, 102, 241, 0.35);
+  }
+
+  .envelope-animation__heart {
+    position: absolute;
+    top: 8%;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 0.4rem 0.4rem 0.35rem 0.35rem;
+    background: linear-gradient(135deg, #fb7185, #f472b6);
+    transform: rotate(45deg) scale(0.8);
+    opacity: 0;
+    animation: heart-float 2.8s infinite ease-in;
+  }
+
+  .envelope-animation__heart::before,
+  .envelope-animation__heart::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: inherit;
+    border-radius: inherit;
+  }
+
+  .envelope-animation__heart::before {
+    top: -50%;
+    left: 0;
+  }
+
+  .envelope-animation__heart::after {
+    top: 0;
+    left: -50%;
+  }
+
+  .envelope-animation__heart--1 {
+    left: 52%;
+    animation-delay: 0.25s;
+  }
+
+  .envelope-animation__heart--2 {
+    left: 28%;
+    animation-delay: 0.85s;
+  }
+
+  .envelope-animation__heart--3 {
+    left: 72%;
+    animation-delay: 1.35s;
+  }
+
+  .envelope-animation--sm .envelope-animation__heart {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+
+  .envelope-animation--lg .envelope-animation__heart {
+    width: 1.3rem;
+    height: 1.3rem;
+    top: 4%;
+  }
+
+  .envelope-animation--sm .envelope-animation__letter {
+    border-radius: 0.3rem;
+  }
+
+  .envelope-animation--lg .envelope-animation__letter {
+    border-radius: 0.6rem;
+  }
+}
+
+@keyframes envelope-flap {
+  0%, 45%, 100% {
+    transform: rotateX(0deg);
+  }
+  20% {
+    transform: rotateX(28deg);
+  }
+}
+
+@keyframes envelope-letter {
+  0%, 50%, 100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-16%);
+  }
+}
+
+@keyframes heart-float {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.75) rotate(45deg);
+  }
+  15% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(-34px) scale(1) rotate(45deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-56px) scale(1.15) rotate(45deg);
+  }
+}
+
+@keyframes confirm-spin {
+  to {
+    transform: rotate(1turn);
+  }
 }
 
 @layer utilities {

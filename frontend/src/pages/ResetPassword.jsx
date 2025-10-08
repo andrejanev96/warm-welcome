@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { authAPI } from '../utils/api';
+import CelebrationOverlay from '../components/animations/CelebrationOverlay.jsx';
+import EnvelopeAnimation from '../components/animations/EnvelopeAnimation.jsx';
 
 const ResetPassword = () => {
   const { token } = useParams();
@@ -8,6 +10,17 @@ const ResetPassword = () => {
   const [formData, setFormData] = useState({ password: '', confirmPassword: '' });
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [overlayContent, setOverlayContent] = useState({ title: '', message: '' });
+  const celebrationTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -18,21 +31,42 @@ const ResetPassword = () => {
     event.preventDefault();
     setStatus({ type: 'idle', message: '' });
 
+    if (submitting) {
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setStatus({ type: 'error', message: 'Passwords do not match.' });
       return;
     }
 
     setSubmitting(true);
+    setOverlayContent({
+      title: 'Updating password... 🔒',
+      message: 'Securing your account in a blink.',
+    });
+    setShowCelebration(true);
+
     try {
       await authAPI.resetPassword({ token, password: formData.password });
       setStatus({ type: 'success', message: 'Password updated! Redirecting to sign in...' });
-      setTimeout(() => navigate('/login'), 2500);
+      setOverlayContent({
+        title: 'All set! 🎉',
+        message: 'Redirecting you to sign in with your new password.',
+      });
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
+      }
+      celebrationTimeoutRef.current = setTimeout(() => {
+        setShowCelebration(false);
+        navigate('/login');
+      }, 2000);
     } catch (error) {
       setStatus({
         type: 'error',
         message: error.response?.data?.message || 'Unable to reset password. Please try again.',
       });
+      setShowCelebration(false);
     } finally {
       setSubmitting(false);
     }
@@ -114,7 +148,12 @@ const ResetPassword = () => {
               disabled={submitting}
               className="glass-btn glass-btn-orange"
             >
-              {submitting ? 'Saving...' : 'Update password'}
+              {submitting ? (
+                <span className="flex items-center justify-center gap-3">
+                  <EnvelopeAnimation size="sm" />
+                  <span className="font-medium">Locking it in...</span>
+                </span>
+              ) : 'Update password'}
             </button>
           </form>
 
@@ -129,6 +168,12 @@ const ResetPassword = () => {
         <div className="absolute top-40 right-10 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000" />
         <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000" />
       </div>
+
+      <CelebrationOverlay
+        show={showCelebration}
+        title={overlayContent.title}
+        message={overlayContent.message}
+      />
     </div>
   );
 };

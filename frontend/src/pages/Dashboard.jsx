@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
+import OnboardingChecklist from '../components/OnboardingChecklist';
 import api from '../utils/api';
 
 const MAX_ACTIVITY_ITEMS = 8;
@@ -296,67 +297,7 @@ const Dashboard = () => {
             </Link>
           </div>
 
-          <div className="glass-card">
-            <h3 className="text-2xl font-bold text-white mb-6">🎯 Getting Started</h3>
-            <div className="space-y-4">
-              <Link
-                to="/integrations"
-                className="flex items-start gap-4 p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-orange-400 to-pink-500 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
-                  1
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-white text-lg">Connect your Shopify store</h4>
-                  <p className="text-sm text-white/70 mt-1">
-                    Link your e-commerce store to start collecting customer data
-                  </p>
-                </div>
-                <svg className="w-5 h-5 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-
-              <Link
-                to="/brand-voice"
-                className="flex items-start gap-4 p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
-                  2
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-white text-lg">Define your brand voice</h4>
-                  <p className="text-sm text-white/70 mt-1">
-                    Teach AI how to write emails that sound like you
-                  </p>
-                </div>
-                <svg className="w-5 h-5 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-
-              <div className="flex items-start gap-4 p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
-                  3
-                </div>
-                <div>
-                  <h4 className="font-semibold text-white text-lg">Launch AI-powered campaigns</h4>
-                  <p className="text-sm text-white/70 mt-1">
-                    Set triggers and let AI generate unique emails for each customer
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex gap-3">
-              <Link to="/brand-voice" className="glass-button flex-1 justify-center">
-                Setup Brand Voice
-              </Link>
-              <Link to="/campaigns/new" className="glass-button flex-1 justify-center">
-                Start Campaign
-              </Link>
-            </div>
-          </div>
+          <OnboardingChecklist variant="card" />
         </div>
 
         <aside className="glass-card h-full">

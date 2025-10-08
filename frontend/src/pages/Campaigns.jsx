@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../components/Layout';
+import ConfirmDialog from '../components/ConfirmDialog.jsx';
 import api from '../utils/api';
 
 const Campaigns = () => {
@@ -8,6 +9,7 @@ const Campaigns = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [error, setError] = useState('');
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, campaign: null, loading: false });
 
   const statusFilters = [
     { value: 'all', label: 'All Campaigns', icon: '📊' },
@@ -65,13 +67,28 @@ const Campaigns = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this campaign?')) return;
+  const requestDelete = (campaign) => {
+    setDeleteDialog({ open: true, campaign, loading: false });
+  };
+
+  const closeDeleteDialog = () => {
+    setDeleteDialog((prev) => (prev.loading ? prev : { open: false, campaign: null, loading: false }));
+  };
+
+  const handleDelete = async () => {
+    const campaign = deleteDialog.campaign;
+    if (!campaign) {
+      return;
+    }
+
+    setDeleteDialog((prev) => ({ ...prev, loading: true }));
 
     try {
-      await api.delete(`/campaigns/${id}`);
+      await api.delete(`/campaigns/${campaign.id}`);
+      setDeleteDialog({ open: false, campaign: null, loading: false });
       fetchCampaigns();
     } catch (err) {
+      setDeleteDialog((prev) => ({ ...prev, loading: false }));
       setError(err.response?.data?.message || 'Failed to delete campaign');
       console.error('Failed to delete campaign', err);
     }
@@ -270,7 +287,7 @@ const Campaigns = () => {
                     </Link>
                     {campaign.status !== 'completed' && (
                       <button
-                        onClick={() => handleDelete(campaign.id)}
+                        onClick={() => requestDelete(campaign)}
                         className="glass-button bg-red-500/30 hover:bg-red-500/40"
                         title="Delete campaign"
                       >
@@ -284,6 +301,18 @@ const Campaigns = () => {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deleteDialog.open}
+        title="Delete campaign?"
+        message={deleteDialog.campaign ? `This will permanently remove ${deleteDialog.campaign.name}.` : ''}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleDelete}
+        onCancel={closeDeleteDialog}
+        loading={deleteDialog.loading}
+        tone="danger"
+      />
     </Layout>
   );
 };

@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import Alert from '../components/Alert';
+import CelebrationOverlay from '../components/animations/CelebrationOverlay.jsx';
+import EnvelopeAnimation from '../components/animations/EnvelopeAnimation.jsx';
 import api from '../utils/api';
 
 const CampaignForm = () => {
@@ -26,6 +28,17 @@ const CampaignForm = () => {
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationContent, setCelebrationContent] = useState({ title: '', message: '' });
+  const celebrationTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const isFormValid = Boolean(formData.name.trim() && formData.goal && formData.triggerType);
 
@@ -119,8 +132,18 @@ const CampaignForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (loading) {
+      return;
+    }
+
     setLoading(true);
     setError('');
+    setShowCelebration(false);
+    setCelebrationContent({
+      title: isEdit ? 'Updating campaign... ✏️' : 'Creating campaign... ✨',
+      message: 'Brewing personalized journeys for your customers.',
+    });
 
     try {
       const payload = {
@@ -137,16 +160,30 @@ const CampaignForm = () => {
       if (isEdit) {
         await api.put(`/campaigns/${id}`, payload);
         setSuccess('Campaign updated successfully!');
+        setCelebrationContent({
+          title: 'Campaign refreshed! 🔁',
+          message: 'Taking you back to your campaign list.',
+        });
       } else {
         await api.post('/campaigns', payload);
         setSuccess('Campaign created successfully!');
+        setCelebrationContent({
+          title: 'Campaign ready! 🎉',
+          message: 'Launching those warm welcomes now.',
+        });
       }
 
-      setTimeout(() => navigate('/campaigns'), 1500);
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
+      }
+      setShowCelebration(true);
+      celebrationTimeoutRef.current = setTimeout(() => {
+        navigate('/campaigns');
+      }, 1700);
     } catch (err) {
       setError(err.response?.data?.message || `Failed to ${isEdit ? 'update' : 'create'} campaign`);
       console.error('Failed to save campaign', err);
-    } finally {
+      setShowCelebration(false);
       setLoading(false);
     }
   };
@@ -479,7 +516,12 @@ const CampaignForm = () => {
             disabled={loading || !isFormValid}
             className="glass-button flex-1 justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Saving...' : isEdit ? 'Update Campaign' : 'Create Campaign'}
+            {loading ? (
+              <span className="flex items-center gap-3">
+                <EnvelopeAnimation size="sm" />
+                <span className="font-medium">Saving magic...</span>
+              </span>
+            ) : isEdit ? 'Update Campaign' : 'Create Campaign'}
           </button>
           <button
             type="button"
@@ -490,6 +532,12 @@ const CampaignForm = () => {
           </button>
         </div>
       </form>
+
+      <CelebrationOverlay
+        show={showCelebration}
+        title={celebrationContent.title}
+        message={celebrationContent.message}
+      />
     </Layout>
   );
 };
